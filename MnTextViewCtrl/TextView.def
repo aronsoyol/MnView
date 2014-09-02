@@ -1,4 +1,0 @@
-LIBRARY TextView
-EXPORTS 
-	MnTextViewInit
-	MnTextViewCreate
