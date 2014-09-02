@@ -1,6 +1,6 @@
 ﻿#include "MnTextView.h"	
 //#include "../verui/verui.h"
-#include "../MnViewDotNet/resource.h"
+#include "../MnTextDotNet/resource.h"
 MnTextView::MnTextView(HWND hwnd):
 	TextViewBase	(hwnd),
 	//m_visualLineView(hwnd,m_pTextDoc)

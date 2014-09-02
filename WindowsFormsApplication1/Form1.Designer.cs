@@ -28,32 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.mnTextView1 = new MongolDotNet.MnTextView();
             this.SuspendLayout();
-            // 
-            // mnTextView1
-            // 
-            this.mnTextView1.BackColor = System.Drawing.SystemColors.Window;
-            this.mnTextView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mnTextView1.Location = new System.Drawing.Point(0, 0);
-            this.mnTextView1.Margin = new System.Windows.Forms.Padding(0);
-            this.mnTextView1.Name = "mnTextView1";
-            this.mnTextView1.Size = new System.Drawing.Size(840, 457);
-            this.mnTextView1.TabIndex = 0;
             // 
             // Form1
             // 
-            this.ClientSize = new System.Drawing.Size(840, 457);
-            this.Controls.Add(this.mnTextView1);
+            this.ClientSize = new System.Drawing.Size(439, 344);
             this.Name = "Form1";
-            this.Load += new System.EventHandler(this.Form1_Load_1);
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private MongolDotNet.MnTextView mnTextView1;
 
 
 

@@ -121,9 +121,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MnViewDotNet\MnViewDotNet.vcxproj">
+    <ProjectReference Include="..\MnTextDotNet\MnTextDotNet.vcxproj">
       <Project>{43F3B9A4-8391-4A58-A8CE-94615B88496F}</Project>
-      <Name>MnCtrlDotNet</Name>
+      <Name>MnTextDotNet</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
