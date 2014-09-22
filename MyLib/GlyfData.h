@@ -25,6 +25,8 @@ protected :
 	//int					m_CharBufferLen;
 	//int					m_StringLength;
 	MNTextAttr			m_textAttr;
+	//MNTextAttr	*		m_pGlobalTextAttr;
+	COLORREF*			m_pForeColor;
 	UINT				m_charBufferLength;
 	WORD*				m_pClusterList;
 	int*				m_pWidthList;
@@ -42,7 +44,7 @@ protected :
 	//TextAttribute *		m_pTextAttr;
 	//COLORREF*			m_pColorList;
 	MNFontManager*		m_pFontManager;
-
+	//mn
 	//RUN*				m_pRunList;
 	std::vector<MNRun>	m_pRunList;
 	
@@ -59,6 +61,7 @@ protected :
 	int					m_recentlyUsedRunX;
 	int					m_recentlyUsedSubLine;
 	int					m_mongolianScriptId;
+	bool	*			m_pFocused;
 /*
 	char * fSoftBreak   ;//= new char[length+13];     // Potential linebreak point
     char * fWhiteSpace  ;//= new char[length+13];     // A unicode whitespace character, except NBSP, ZWNBSP

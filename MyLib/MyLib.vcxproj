@@ -137,7 +137,6 @@
     <ClCompile Include="FontNameList.cpp" />
     <ClCompile Include="GlyfData.cpp" />
     <ClCompile Include="MNCharAttr.cpp" />
-    <ClCompile Include="MNException.cpp" />
     <ClCompile Include="MNFont.cpp" />
     <ClCompile Include="MNFontFallback.cpp" />
     <ClCompile Include="MNFontManager.cpp" />

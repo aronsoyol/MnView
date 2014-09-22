@@ -44,6 +44,21 @@
     <ClCompile Include="CmpIterator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MnCursor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MnWhite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MnStaticResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MnTextView_EM_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MnTextBoxApi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="codepages.h">
@@ -74,6 +89,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MnDataType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MnCursor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MnStaticResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MnWhite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MnTextBoxApi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

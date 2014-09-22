@@ -9,27 +9,27 @@
 #include "..\mylib\mylib.h"
 #include "..\mylib\VisLineView.h"
 //#include "..\MongolianNote\resource.h"
-
+#include "MnStaticResource.h"
 #pragma comment(lib, "imm32.lib") 
-#define MNTEXTVIEW_CLASS	L"MNTEXTVIEW_CLASS"
-#define	WD_HORIZONTAL		0
-#define WD_VERTICAL			1
-#define Margin				2
-
+#define MNTEXTVIEW_CLASS		L"MNTEXTVIEW_CLASS"
+#define	WD_HORIZONTAL			0
+#define WD_VERTICAL				1
+#define Margin					2
+#define DFAULT_CARET_WIDTH		1
 int ScrollDir(int counter, int dir);
-//bool IsKeyPressed(UINT nVirtKey);
-
+HCURSOR CreateMyCursor(HMODULE module);
 class MnTextView:public TextViewBase
 {
 	friend class VisLineView;
 	FILE *fp;
-	WCHAR			*m_buffer;
-	UINT			m_bufLen;
+	//WCHAR			*m_buffer;
+	//UINT			m_bufLen;
 	//POINT			m_caretPos;
 	//CHAR_POS		m_caretCharPos;
-	BOOL			m_isLButtonDown;
+	//BOOL			m_isLButtonDown;
 	//CHAR_POS		m_selStart;
 	//UINT			m_selLength;
+protected:
 	BOOL			m_direction;
 
 	int				m_MarginLeft;
@@ -46,11 +46,17 @@ class MnTextView:public TextViewBase
 	int				m_nScrollPos;
 	int				m_nScrollMax;
 	MNFontManager*	m_pFontManager;
-
+	HCURSOR			m_hCursor;
 	//MNUiPopupMenu*	m_pMenu;
 	bool			m_fMenuVisible;
 	HMODULE			m_hResModule;
+	HMODULE			m_hMainModule;
 
+	COLORREF		m_colFore;
+	COLORREF		m_colBack;
+
+	static MnStaticResource		m_Res;
+	
 public:
 	MnTextView(HWND hwnd);
 	~MnTextView(void);
@@ -109,7 +115,7 @@ private:
 	//virtual LONG OnChar(UINT nChar, UINT nFlags);
 
 	virtual LONG OnSetFocus(HWND hwndOld);
-	//virtual LONG OnKillFocus(HWND hwndNew);
+	virtual LONG OnKillFocus(HWND hwndNew);
 
 	//virtual BOOL OnCut(){return 0;}
 	//virtual BOOL OnCopy(){return 0;}
@@ -127,6 +133,7 @@ private:
 		LINE_INDEX idx = m_visualLineView.getLineIndex(m_CurrentCharPos);
 		return idx.visLine;
 	}
+	
 	virtual LONG OnGetSelText(WCHAR* pBuffer, ULONG bufferLength);
 	virtual	LONG OnGetCurLineD()
 	{
@@ -171,7 +178,7 @@ protected:
 	///
 	//TextDocument	*m_pTextDoc;
 //override
-private :
+protected :
 	
 	LONG				OpenFile(TCHAR *szFileName);
 	LONG				OnSetText(WCHAR* buffer, ULONG length);
@@ -194,6 +201,7 @@ private :
 	//
 
 	BOOL				CreateMyCaret() ;
+	
 	//BOOL				MouseCoordToFilePos(int x, int y, ULONG *pnLineNo, ULONG *pnFileOffset, int *px);//, ULONG *pnLineLen=0);
 	BOOL				MouseCoordToCharPos(int x, int y,__out CHAR_POS* charPos, int *px =NULL);
 	//BOOL				CharPosToFilePos(__in const CHAR_POS& charPos, __out ULONG *pnFileOffset);
@@ -296,6 +304,12 @@ private :
 	virtual BOOL		OnDoStatistic(STATISTIC* stati);
 	virtual LONG		OnSetResModule(HMODULE hModule);
 	virtual LONG		OnGetTextLen();
+
+	//
+	//EM_ message handler
+	//
+	virtual LONG		OnMsg_EM_GETSEL(ULONG *pStart, ULONG * pEnd);
+	virtual	LONG		OnMsg_EM_SETSEL(long nStart, long nEnd);
 };
 
 

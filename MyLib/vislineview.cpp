@@ -226,7 +226,7 @@ int VisLineView::setWidth(UINT width)
 	m_width			= width ;
 	//m_visLineCount	= 0;
 
-	for(int l = 0; l < m_logLineCount; l++)
+	for(UINT l = 0; l < m_logLineCount; l++)
 	{
 		int id		= getLineCache(l);
 		m_v2s[l]	= m_cacheList[id].breakLine(width);
@@ -625,9 +625,9 @@ int	VisLineView::getLineCache(UINT line)
 	ULONG	len		= m_pTextDoc->getline(line, m_buff, MAX_LINE_LENGTH, &off_chars);
 	HDC		tmpDc	= GetDC(m_pTextView->m_hWnd);
 
-	m_cacheList[m_rci].initialize(line, off_chars, m_buff, len, m_pTextView->m_pFontManager);
+	m_cacheList[m_rci].initialize(line, off_chars, m_buff, len, m_pTextView->m_pFontManager, &m_pTextView->m_colFore, &m_pTextView->m_bFocused);
 	m_cacheList[m_rci].generateGlyph(tmpDc, m_buff, len);
-
+	//m_cacheList[m_rci].setFgColor(0, len, m_pTextView->m_colFore);
 	ReleaseDC(0, tmpDc);
 	int l = m_cacheList[m_rci].breakLine(m_width);
 	m_cacheList[m_rci].use();

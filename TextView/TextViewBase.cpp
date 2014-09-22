@@ -11,29 +11,31 @@ bool IsKeyPressed(UINT nVirtKey)
 {
 	return GetKeyState(nVirtKey) < 0 ? true : false;
 }
-TextViewBase::TextViewBase(HWND hwnd)
-{
-	m_hWnd				= hwnd;
+TextViewBase::TextViewBase(HWND hwnd):
+
+	m_hWnd				( hwnd		),
 	// Runtime data
-	m_nSelectionMode	= SEL_NONE;
-	m_nEditMode			= MODE_INSERT;
-
 	
-
-	
-	m_nSelectionStart	= 0;
-	m_nSelectionEnd		= 0;
-	m_nSelectionType	= SEL_NONE;
-	m_nCursorOffset		= 0;
-	m_nCurrentLine		= 0;
-	m_nCurrentLine_D    = 0;
-	//m_nScrollPos		= 0;
-	//ime
-	m_imeProperty		= 0;
-
+	m_nEditMode			( MODE_INSERT),
+	m_nSelectionMode	( SEL_NONE	),
+	m_nSelectionStart	( 0			),
+	m_nSelectionEnd		( 0			),
+	m_nSelectionType	( SEL_NONE	),
+	//m_nCursorOffset		( 0),
+	m_nCurrentLine		( 0			),
+	m_nCurrentLine_D    ( 0			),
+	//m_nScrollPos		( 0			),
+	//ime	
+	m_imeProperty		( 0			),
+	m_bFocused			( false		),
+	m_bDrawFocusRect	( true		),
+	//
+	m_pTextDoc			( 0			),
+	m_pFndIterator		( 0			)
+{
 	m_pTextDoc			= new TextDocument();
 	m_pFndIterator		= new FindIterator(m_pTextDoc);
-
+	
 	//UpdateMetrics();
 }
 
@@ -50,313 +52,360 @@ LONG TextViewBase::OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage)
 	SetFocus(m_hWnd);
 	return MA_ACTIVATE;
 }
-LONG WINAPI TextViewBase::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
+bool TextViewBase::HandleWndProc(UINT msg, WPARAM wParam, LPARAM lParam, LONG *pResult)
 {
-	HIMC hIMC    = NULL;
-	switch(msg)
+	HIMC hIMC = NULL;
+	switch (msg)
 	{
-	// Draw contents of TextView whenever window needs updating
+		// Draw contents of TextView whenever window needs updating
 	case WM_ERASEBKGND:
-		return 1;
-	// Need to custom-draw the border for XP/Vista themes
+		*pResult = 1;
+		return true;
+		// Need to custom-draw the border for XP/Vista themes
 	case WM_NCPAINT:
-		break;//return OnNcPaint((HRGN)wParam);
+		*pResult = OnNcPaint((HRGN)wParam);
+		return true;
 
 	case WM_PAINT:
-		return OnPaint();
-
-	// Set a new font 
+		*pResult = OnPaint();
+		return true;
+		// Set a new font 
 	case WM_SETFONT:
-		return OnSetFont((HFONT)wParam);
+		*pResult = OnSetFont((HFONT)wParam);
+		return true;
 
 	case WM_SIZE:
-		return OnSize(wParam, LOWORD(lParam), HIWORD(lParam));
+		*pResult = OnSize(wParam, LOWORD(lParam), HIWORD(lParam));
+		return true;
 
 	case WM_VSCROLL:
-		return OnVScroll(LOWORD(wParam), HIWORD(wParam));
+		*pResult = OnVScroll(LOWORD(wParam), HIWORD(wParam));
+		return true;
 
 	case WM_HSCROLL:
-		return OnHScroll(LOWORD(wParam), HIWORD(wParam));
+		*pResult = OnHScroll(LOWORD(wParam), HIWORD(wParam));
+		return true;
 
 	case WM_MOUSEACTIVATE:
-		return OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+		*pResult = OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+		return true;
 
-	//case WM_CONTEXTMENU:
-	//	return OnContextMenu((HWND)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		//case WM_CONTEXTMENU:
+		//	return OnContextMenu((HWND)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
 	case WM_MOUSEWHEEL:
-		if(IsKeyPressed(VK_CONTROL))
-			break;
+		if (IsKeyPressed(VK_CONTROL))
+			return false;
 		else
-			return OnMouseWheel((short)HIWORD(wParam));
+			*pResult = OnMouseWheel((short)HIWORD(wParam));
+		return true;
 
 	case WM_SETFOCUS:
-		return OnSetFocus((HWND)wParam);
+		*pResult = OnSetFocus((HWND)wParam);
+		return true;
 
 	case WM_KILLFOCUS:
-		return OnKillFocus((HWND)wParam);
+		*pResult = OnKillFocus((HWND)wParam);
+		return true;
 
-	// make sure we get arrow-keys, enter, tab, etc when hosted inside a dialog
+		// make sure we get arrow-keys, enter, tab, etc when hosted inside a dialog
 	case WM_GETDLGCODE:
-		return DLGC_WANTALLKEYS;//DLGC_WANTMESSAGE;//DLGC_WANTARROWS;
+		*pResult = DLGC_WANTALLKEYS;//DLGC_WANTMESSAGE;//DLGC_WANTARROWS;
+		return true;
 
 	case WM_LBUTTONDOWN:
-		return OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		*pResult = OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		return true;
 
 	case WM_LBUTTONUP:
-		return OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		*pResult = OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		return true;
 
 	case WM_LBUTTONDBLCLK:
-		return OnLButtonDblClick(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		*pResult = OnLButtonDblClick(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		return true;
 
 	case WM_RBUTTONDOWN:
-		return OnRButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		*pResult = OnRButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		return true;
 	case WM_MOUSEMOVE:
-		return OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		*pResult = OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+		return true;
 
 	case WM_KEYDOWN:
-		return OnKeyDown(wParam, lParam);
+		*pResult = OnKeyDown(wParam, lParam);
+		return true;
 
 	case WM_UNDO: case TXM_UNDO: case EM_UNDO:
-		return Undo();
+		*pResult = Undo();
+		return true;
 
-	case TXM_REDO: case EM_REDO:
-		return Redo();
+	case TXM_REDO : case EM_REDO:
+		*pResult = Redo();
+		return true;
 
 	case TXM_CANUNDO: case EM_CANUNDO:
-		return CanUndo();
+		*pResult = CanUndo();
+		return true;
 
 	case TXM_CANREDO: case EM_CANREDO:
-		return CanRedo();
+		*pResult = CanRedo();
+		return true;
 
 	case WM_CHAR:
 		OutputDebugString(L"WM_CHAR\n");
-		return OnChar(wParam, lParam);
+		*pResult = OnChar(wParam, lParam);
+		return true;
 
 	case WM_SETCURSOR:
-		
-		if(LOWORD(lParam) == HTCLIENT)
-			return TRUE;
 
-		break;
-
+		if (LOWORD(lParam) == HTCLIENT)
+		{
+			*pResult = TRUE;
+			return true;
+		}
+		else
+			return false;
 	case WM_COPY:
-		return OnCopy();
+		*pResult = OnCopy();
+		return true;
 
 	case WM_CUT:
-		return OnCut();
+		*pResult = OnCut();
+		return true;
 
 	case WM_PASTE:
-		return OnPaste();
+		*pResult = OnPaste();
+		return true;
 
 	case WM_CLEAR:
-		return OnClear();
-
+		*pResult = OnClear();
+		return true;
+	
 	case WM_GETTEXT:
-		return GetText((WCHAR*)lParam, 0, (ULONG)wParam);
+		*pResult = GetText((WCHAR*)lParam, 0, (ULONG)wParam);
+		return true;
 
 	case WM_SETTEXT:
-		return OnSetText((WCHAR*)lParam, lstrlen((WCHAR*)lParam));
-	//case TXM_SETTEXT:
-	//	{
-	//		ClearFile();
-	//		EnterText((WCHAR*)lParam, (LONG)wParam);
-	//		return 0;
-	//	}
+		*pResult = OnSetText((WCHAR*)lParam, lstrlen((WCHAR*)lParam));
+		return true;
+		//case TXM_SETTEXT:
+		//	{
+		//		ClearFile();
+		//		EnterText((WCHAR*)lParam, (LONG)wParam);
+		//		return 0;
+		//	}
 	case WM_TIMER:
-		return OnTimer(wParam);
+		*pResult = OnTimer(wParam);
+		return true;
 
-    case WM_IME_STARTCOMPOSITION:
+	case WM_IME_STARTCOMPOSITION:
 		OutputDebugString(L"WM_IME_STARTCOMPOSITION\n");
- 		return OnStartComposition(wParam, lParam);
+		*pResult = OnStartComposition(wParam, lParam);
+		return true;
 		//return DefWindowProc(m_hWnd, WM_IME_STARTCOMPOSITION, wParam, lParam);
 
-	case WM_IME_COMPOSITION :
+	case WM_IME_COMPOSITION:
 		OutputDebugString(L"WM_IME_COMPOSITION\n");
-		return DefWindowProc(m_hWnd, WM_IME_COMPOSITION, wParam, lParam);
+		*pResult = DefWindowProc(m_hWnd, WM_IME_COMPOSITION, wParam, lParam);
+		return true;
 		//return OnComposition(wParam, lParam);
 
 	case WM_IME_ENDCOMPOSITION:
 		OutputDebugString(L"WM_IME_ENDCOMPOSITION\n");
-		return DefWindowProc(m_hWnd, WM_IME_ENDCOMPOSITION, wParam, lParam);
+		*pResult = DefWindowProc(m_hWnd, WM_IME_ENDCOMPOSITION, wParam, lParam);
+		return true;
 		//return OnEndComposition(wParam, lParam);
 
-	case WM_IME_CHAR :
+	case WM_IME_CHAR:
 		OutputDebugString(L"WM_IME_CHAR\n");
-		return DefWindowProc(m_hWnd, WM_IME_CHAR, wParam, lParam);
+		*pResult = DefWindowProc(m_hWnd, WM_IME_CHAR, wParam, lParam);
+		return true;
 
-	case WM_IME_CONTROL :
+	case WM_IME_CONTROL:
 		OutputDebugString(L"WM_IME_CONTROL\n");
-		return DefWindowProc(m_hWnd, WM_IME_CONTROL, wParam, lParam);
+		*pResult = DefWindowProc(m_hWnd, WM_IME_CONTROL, wParam, lParam);
+		return true;
 
 
-	case WM_IME_NOTIFY :
+	case WM_IME_NOTIFY:
 		OutputDebugString(L"WM_IME_NOTIFY\n");
-		return DefWindowProc(m_hWnd, WM_IME_NOTIFY, wParam, lParam);
+		*pResult = DefWindowProc(m_hWnd, WM_IME_NOTIFY, wParam, lParam);
+		return true;
 		//return HandleImeNotify(wParam, lParam);
 
 	case WM_IME_REQUEST:
 		OutputDebugString(L"WM_IME_REQUEST\n");
-		return DefWindowProc(m_hWnd, WM_IME_REQUEST,wParam, lParam);
+		*pResult = DefWindowProc(m_hWnd, WM_IME_REQUEST, wParam, lParam);
+		return true;
 	case WM_INPUTLANGCHANGE:
-		return OnInputLanChange(wParam, lParam);
+		*pResult = OnInputLanChange(wParam, lParam);
+		return true;
 
 	case TXM_PRINT:
-		return OnPrint((HDC)wParam, (int)lParam);
+		*pResult = OnPrint((HDC)wParam, (int)lParam);
+		return true;
 
-	//
+		//
 	case TXM_OPENFILE:
-		return OpenFile((TCHAR *)lParam);
+		*pResult = OpenFile((TCHAR *)lParam);
+		return true;
 
-		
+
 	case TXM_SAVEFILE:
-		return SaveFile((TCHAR *)lParam);
+		*pResult = SaveFile((TCHAR *)lParam);
+		return true;
 
 	case TXM_IMPORTFILE:
-		return ImportFile((TCHAR *)lParam, (int)wParam);
+		*pResult = ImportFile((TCHAR *)lParam, (int)wParam);
+		return true;
 
 	case TXM_EXPORTFILE:
-
-		{
-			int convertype	= LOWORD(wParam);
-			int utf_type	= HIWORD(wParam);	
-			return ExportFile((TCHAR *)lParam, convertype, utf_type);
-		}
-
-	case TXM_CLEAR:
-		return ClearFile();
-/*
-	case TXM_SETLINESPACING:
-		return SetLineSpacing(wParam, lParam);
-
-	case TXM_ADDFONT:
-		return AddFont((HFONT)wParam);
-
-	case TXM_SETCOLOR:
-		return SetColour(wParam, lParam);
-
-	case TXM_SETSTYLE:
-		return SetStyle(wParam, lParam);
-
-	case TXM_SETCARETWIDTH:
-		return SetCaretWidth(wParam);
-
-	case TXM_SETIMAGELIST:
-		return SetImageList((HIMAGELIST)wParam);
-
-	case TXM_SETLONGLINE:
-		return SetLongLine(lParam);
-
-	case TXM_SETLINEIMAGE:
-		return SetLineImage(wParam, lParam);
-*/
-	case TXM_GETFORMAT:
-		return m_pTextDoc->getformat();
-
-	case TXM_SETFORMAT:
-		return m_pTextDoc->setformat((int)wParam);
-
-	case TXM_GETSELSIZE:
-		return SelectionSize();
-
-	case TXM_SETSELALL:
-		return SelectAll();
-
-	case TXM_GETCURPOS:
-		return m_CurrentCharPos.get();
-
-	case TXM_GETCURLINE_D:
-		return m_nCurrentLine_D;
-
-	case TXM_GETCURLINE_V:
-		return OnGetCurLineV();
-
-	case TXM_GETCURCOL:
-		return OnGetCurCol();
-
-	case TXM_GETEDITMODE:
-		return m_nEditMode;
-
-	case TXM_SETEDITMODE:
-		lParam		= m_nEditMode;
-		m_nEditMode = wParam;
-		return lParam;
-	case TXM_FIND_INIT:
-		FindInitial((WCHAR*)lParam);
-		return 0;
-	case TXM_FIND:
-		{
-			BOOL m	= (BOOL)LOWORD(wParam);
-			BOOL b	= (BOOL)HIWORD(wParam);
-			//FindText()
-			if(b)
-				return FindBackward(m, NULL);
-			else
-				return FindForward (m, NULL);
-		}
-	case TXM_FIND_TEXT:
-		{
-			FIND_OPTION* fp	= (FIND_OPTION*)(lParam);
-			return Find_Text(fp->text, lstrlen(fp->text), fp->fBackward, fp->fMachCase,fp->fWarp);
-		}
-	case TXM_REPLACE_TEXT:
-		{
-			return Replace_Text((REPLACE_OPTION*)(lParam));
-		}
-	case TXM_SETRESMODULE:
-		{
-			return OnSetResModule((HMODULE)lParam);
-		}
-	case TXM_GETTEXTLEN:
-		{
-			return OnGetTextLen();
-		}
-	case TXM_REPLACE:
-		{
-			BOOL ra	= (BOOL)LOWORD(wParam);
-			WORD mb	= (WORD)HIWORD(wParam);
-			BOOL m	= (BOOL)LOBYTE(mb);
-			BOOL b	= (BOOL)HIBYTE(mb);
-			if(b)
-				return FindBackward(m, (WCHAR*)lParam, ra);
-			else
-				return FindForward (m, (WCHAR*)lParam, ra);
-		}
-	case TXM_FIND_GETTEXTLENGTH:
-		return m_pFndIterator->find_text_length();
-	//case TXM_FIND_INITIAL:
-	//	FindInitial((WCHAR*) wParam);
-	//	return 0;
-	//case TXM_FIND_FOREWARD:
-	//	return FindForeward((BOOL)wParam);
-
-	//case TXM_FIND_BACKWARD:
-	//	return FindBackward((BOOL)wParam);
-	case TXM_GETSELSTART:
-		return m_nSelectionStart;
-	case TXM_GETSELEND:
-		return m_nSelectionEnd;
-	case TXM_GETSELTEXT:
-		return OnGetSelText((WCHAR*)wParam, ULONG(lParam));
-	case TXM_SETTESTERMODE:
-		OnTesterMode((bool)wParam);
-		return 0;
-
-
-
-	case TXM_SETCONTEXTMENU:
-		m_hUserMenu = (HMENU)wParam;
-		return 0;
-	case TXM_STATISTIC:
-		return OnDoStatistic((STATISTIC*)(lParam));
-
-	case TXM_GETCONVERTTYPES:
-		return OnGetConvertTypes((convert_type*)(lParam));
-	default:
-		break;
+	{
+		int convertype = LOWORD(wParam);
+		int utf_type = HIWORD(wParam);
+		*pResult = ExportFile((TCHAR *)lParam, convertype, utf_type);
+		return true;
 	}
 
-	return DefWindowProc(m_hWnd, msg, wParam, lParam);
+	case TXM_CLEAR:
+		*pResult = ClearFile();
+		return true;
+
+	case TXM_GETFORMAT:
+		*pResult = m_pTextDoc->getformat();
+		return true;
+
+	case TXM_SETFORMAT:
+		*pResult = m_pTextDoc->setformat((int)wParam);
+		return true;
+
+	case TXM_GETSELSIZE:
+		*pResult = SelectionSize();
+		return true;
+
+	case TXM_SETSELALL:
+		*pResult = SelectAll();
+		return true;
+
+	case TXM_GETCURPOS:
+		*pResult = m_CurrentCharPos.get();
+		return true;
+
+	case TXM_GETCURLINE_D:
+		*pResult = m_nCurrentLine_D;
+		return true;
+
+	case TXM_GETCURLINE_V:
+		*pResult = OnGetCurLineV();
+		return true;
+
+	case TXM_GETCURCOL:
+		*pResult = OnGetCurCol();
+		return true;
+
+	case TXM_GETEDITMODE:
+		*pResult = m_nEditMode;
+		return true;
+
+	case TXM_SETEDITMODE:
+		lParam = m_nEditMode;
+		m_nEditMode = wParam;
+		*pResult = lParam;
+		return true;
+	case TXM_FIND_INIT:
+		FindInitial((WCHAR*)lParam);
+		*pResult = 0;
+		return true;
+	case TXM_FIND:
+	{
+		BOOL m = (BOOL)LOWORD(wParam);
+		BOOL b = (BOOL)HIWORD(wParam);
+		//FindText()
+		if (b)
+			*pResult = FindBackward(m, NULL);
+		else
+			*pResult = FindForward(m, NULL);
+		return true;
+	}
+	case TXM_FIND_TEXT:
+	{
+		FIND_OPTION* fp = (FIND_OPTION*)(lParam);
+		*pResult = Find_Text(fp->text, lstrlen(fp->text), fp->fBackward, fp->fMachCase, fp->fWarp);
+		return true;
+	}
+	case TXM_REPLACE_TEXT:
+	{
+		*pResult = Replace_Text((REPLACE_OPTION*)(lParam));
+		return true;
+	}
+	case TXM_SETRESMODULE:
+	{
+		*pResult = OnSetResModule((HMODULE)lParam);
+		return true;
+	}
+	case WM_GETTEXTLENGTH:
+	case TXM_GETTEXTLEN:
+	{
+		*pResult = OnGetTextLen();
+		return true;
+	}
+	case TXM_REPLACE:
+	{
+		BOOL ra = (BOOL)LOWORD(wParam);
+		WORD mb = (WORD)HIWORD(wParam);
+		BOOL m = (BOOL)LOBYTE(mb);
+		BOOL b = (BOOL)HIBYTE(mb);
+		if (b)
+			*pResult = FindBackward(m, (WCHAR*)lParam, ra);
+		else
+			*pResult = FindForward(m, (WCHAR*)lParam, ra);
+		return true;
+	}
+	case TXM_FIND_GETTEXTLENGTH:
+		*pResult = m_pFndIterator->find_text_length();
+		return true;
+	case TXM_GETSELSTART:
+		*pResult = m_nSelectionStart;
+		return true;
+	case TXM_GETSELEND:
+		*pResult = m_nSelectionEnd;
+		return true;
+	case TXM_GETSELTEXT:
+		*pResult = OnGetSelText((WCHAR*)wParam, ULONG(lParam));
+		return true;
+	case TXM_SETTESTERMODE:
+		OnTesterMode((bool)wParam);
+		*pResult = 0;
+		return true;
+	case TXM_SETCONTEXTMENU:
+		m_hUserMenu = (HMENU)wParam;
+		*pResult = 0;
+		return true;
+	case TXM_STATISTIC:
+		*pResult = OnDoStatistic((STATISTIC*)(lParam));
+		return true;
+	case TXM_GETCONVERTTYPES:
+		*pResult = OnGetConvertTypes((convert_type*)(lParam));
+		return true;
+	case EM_GETSEL:
+		*pResult = OnMsg_EM_GETSEL((ULONG*)wParam, (ULONG*)lParam);
+		return true;
+	case EM_SETSEL:
+		*pResult = OnMsg_EM_SETSEL((LONG)wParam, (LONG)lParam);
+		return true;
+	default:
+		return false;
+	}
+}
+LONG WINAPI TextViewBase::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	LONG result = 0;
+	if (HandleWndProc(msg, wParam, lParam, &result))
+	{
+		return result;
+	}else
+		return DefWindowProc(m_hWnd, msg, wParam, lParam);
 }
 //BOOL TextViewBase::OnTestLoadUmuLib()
 //{
@@ -401,6 +450,7 @@ ULONG TextViewBase::NotifyParent(UINT nNotifyCode, NMHDR *optional)
 	}
 
 	HWND parent = GetParent(m_hWnd);
+	SendMessage(m_hWnd, WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
 	return SendMessage(parent, WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
 }
 ULONG TextViewBase::SelectionSize()
@@ -411,41 +461,20 @@ ULONG TextViewBase::SelectionSize()
 }
 
 ULONG TextViewBase::SelectAll()
-{
-	m_nSelectionStart = 0;
+{	m_nSelectionStart = 0;
 	m_nSelectionEnd   = m_pTextDoc->charCount();
-	m_nCursorOffset   = m_nSelectionEnd;
+	//m_nCursorOffset   = m_nSelectionEnd;
 
 	//Smeg(TRUE);
 	RefreshWindow();
 	return 0;
 }
 //
-//	Retrieve the specified range of text and copy it to supplied buffer
-//	szDest must be big enough to hold nLength characters
-//	nLength includes the terminating NULL
-//
-ULONG TextViewBase::GetText(TCHAR *szDest, ULONG nStartOffset, ULONG nLength)
-{
-	ULONG copied = 0;
-
-	if(nLength > 1)
-	{
-		TextIterator itor = m_pTextDoc->iterate(nStartOffset);
-		copied = itor.gettext(szDest, nLength - 1);
-
-		// null-terminate
-		szDest[copied] = 0;
-	}
-	
-	return copied;
-}
-//
 //	Perform a full redraw of the entire window
 //
 VOID TextViewBase::RefreshWindow()
 {
-	InvalidateRect(m_hWnd, NULL, FALSE);
+	InvalidateRect(m_hWnd, NULL, TRUE);
 }
 BOOL TextViewBase::Undo()
 {
@@ -455,13 +484,13 @@ BOOL TextViewBase::Undo()
 	if(!m_pTextDoc->Undo(&m_nSelectionStart, &m_nSelectionEnd))
 		return FALSE;
 
-	m_nCursorOffset = m_nSelectionEnd;
+	//m_nCursorOffset = m_nSelectionEnd;
 
 	ResetLineCache();
 	RefreshWindow();
 
 	Smeg(m_nSelectionStart != m_nSelectionEnd);
-
+	NotifyParent(TVN_CHANGED);
 	return TRUE;
 }
 
@@ -473,12 +502,12 @@ BOOL TextViewBase::Redo()
 	if(!m_pTextDoc->Redo(&m_nSelectionStart, &m_nSelectionEnd))
 		return FALSE;
 
-	m_nCursorOffset = m_nSelectionEnd;
+	//m_nCursorOffset = m_nSelectionEnd;
 				
 	ResetLineCache();
 	RefreshWindow();
 	Smeg(m_nSelectionStart != m_nSelectionEnd);
-
+	NotifyParent(TVN_CHANGED);
 	return TRUE;
 }
 BOOL TextViewBase::CanUndo()
@@ -569,19 +598,19 @@ BOOL TextViewBase::ForwardDelete()
 		}
 
 		m_pTextDoc->erase_text(selstart, length);
-		m_nCursorOffset = selstart;
+		//m_nCursorOffset = selstart;
 		m_pTextDoc->m_seq.breakopt();
 	}
 	else
 	{
 
-		ULONG oldpos = m_nCursorOffset;
+		ULONG oldpos = m_nSelectionEnd;
 		
 		MoveCharNext();
-		length = m_nCursorOffset - oldpos;
+		length = m_nSelectionEnd - oldpos;
 
 		m_pTextDoc->erase_text(oldpos, length);
-		m_nCursorOffset = oldpos;
+		m_nSelectionEnd = oldpos;
 		
 
 		if(oldpos + length >= line_length + line_offset)
@@ -592,10 +621,10 @@ BOOL TextViewBase::ForwardDelete()
 		//	m_pTextDoc->erase_text(m_nCursorOffset, 1);
 	}
 
-	m_nSelectionStart = m_nCursorOffset;
-	m_nSelectionEnd   = m_nCursorOffset;
+	m_nSelectionStart = selstart;
+	m_nSelectionEnd = selstart;
 
-	FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
+	FilePosToCharPos(selstart, &m_CurrentCharPos);
 
 
 	if(nead_Smeg)
@@ -607,7 +636,7 @@ BOOL TextViewBase::ForwardDelete()
 		if(m_pTextDoc->lineinfo_from_lineno(m_nCurrentLine_D, &line_offset, &line_length ,NULL,NULL))
 		{
 			ResetLineCache( m_nCurrentLine_D);
-			InvalidateRange(min(m_nCursorOffset - 1, 0), line_offset + line_length );
+			InvalidateRange(min(m_nSelectionEnd - 1, 0), line_offset + line_length);
 			RepositionCaret();
 		}
 		
@@ -637,26 +666,26 @@ BOOL TextViewBase::BackDelete()
 		}
 
 		m_pTextDoc->erase_text(selstart, selend-selstart);
-		m_nCursorOffset = selstart;
+		m_nSelectionEnd = selstart;
 		m_pTextDoc->m_seq.breakopt();
 	}
 	// otherwise do a back-delete
-	else if(m_nCursorOffset > 0)
+	else if (m_nSelectionEnd > 0)
 	{
 		//m_nCursorOffset--;
-		ULONG oldpos = m_nCursorOffset;
+		ULONG oldpos = m_nSelectionEnd;
 		MoveCharPrev();
-		length = oldpos - m_nCursorOffset ;
+		length = oldpos - m_nSelectionEnd;
 
-		if(m_nCursorOffset < line_offset)
+		if (m_nSelectionEnd < line_offset)
 		{
 			nead_Smeg = true;
 		}
-		m_pTextDoc->erase_text(m_nCursorOffset, length);
+		m_pTextDoc->erase_text(m_nSelectionEnd, length);
 	}
 
-	m_nSelectionStart = m_nCursorOffset;
-	m_nSelectionEnd   = m_nCursorOffset;
+	m_nSelectionStart = m_nSelectionEnd;
+	//m_nSelectionEnd   = m_nCursorOffset;
 
 	//FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
 
@@ -665,7 +694,7 @@ BOOL TextViewBase::BackDelete()
 		Smeg(FALSE);
 	}else
 	{
-		int		old_offset	= m_nCursorOffset;
+		int		old_offset = m_nSelectionEnd;
 
 		m_pTextDoc->init_linebuffer();
 		ResetLineCache( m_nCurrentLine_D);
@@ -673,13 +702,17 @@ BOOL TextViewBase::BackDelete()
 		//FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
 
 		MoveLineStart(0, false);
-		InvalidateRange((m_nCursorOffset ? m_nCursorOffset - 1 : 0), line_offset + line_length );
-		m_nCursorOffset = old_offset;
+		InvalidateRange((m_nSelectionEnd ? m_nSelectionEnd - 1 : 0), line_offset + line_length);
+		m_nSelectionEnd = old_offset;
 		RepositionCaret();
 		
 		
 	}
-	
+#ifdef _DEBUG
+	wchar_t db_string[200];
+	wsprintf(db_string, L"m_nSelectionEnd=%d\n", m_nSelectionEnd);
+	OutputDebugString(db_string);
+#endif
 	return TRUE;
 }
 
@@ -688,7 +721,7 @@ BOOL TextViewBase::BackDelete()
 //
 VOID TextViewBase::MoveFileStart()
 {
-	m_nCursorOffset = 0;
+	m_nSelectionEnd = 0;
 	RepositionCaret();
 	ScrollToCaret();
 }
@@ -698,7 +731,7 @@ VOID TextViewBase::MoveFileStart()
 //
 VOID TextViewBase::MoveFileEnd()
 {
-	m_nCursorOffset = m_pTextDoc->charCount();
+	m_nSelectionEnd = m_pTextDoc->charCount();
 	RepositionCaret();
 	ScrollToCaret();
 }
@@ -711,6 +744,11 @@ VOID TextViewBase::MoveFileEnd()
 //
 ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 {
+#ifdef _DEBUG
+	wchar_t db_string[200];
+	wsprintf(db_string, L"EnterText  m_nSelectionEnd=%d\n", m_nSelectionEnd);
+	OutputDebugString(db_string);
+#endif
 	ULONG selstart	= min(m_nSelectionStart, m_nSelectionEnd);
 	ULONG selend	= max(m_nSelectionStart, m_nSelectionEnd);
 
@@ -737,10 +775,10 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 			// group this erase with the insert/replace operation
 			m_pTextDoc->m_seq.group();
 			m_pTextDoc->erase_text(selstart, selend-selstart);
-			m_nCursorOffset = selstart;
+			m_nSelectionEnd = selstart;
 		}
 
-		if(!m_pTextDoc->insert_text(m_nCursorOffset, szText, nLength))
+		if(!m_pTextDoc->insert_text(m_nSelectionEnd, szText, nLength))
 			return 0;
 
 		if(fReplaceSelection)
@@ -753,7 +791,7 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 		if(fReplaceSelection)
 		{
 			erase_len = selend - selstart;
-			m_nCursorOffset = selstart;
+			m_nSelectionEnd = selstart;
 		}
 		else
 		{
@@ -770,21 +808,21 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 			// and remove a whole character-cluster (i.e. maybe more than 1 char)
 			if(nLength == 1)
 			{
-				ULONG oldpos	= m_nCursorOffset;
+				ULONG oldpos = m_nSelectionEnd;
 				MoveCharNext();
-				erase_len		= m_nCursorOffset - oldpos;
-				m_nCursorOffset = oldpos;
+				erase_len = m_nSelectionEnd - oldpos;
+				m_nSelectionEnd = oldpos;
 			}
 
 			// if we are at the end of a line (just before the CRLF) then we must
 			// not erase any text - instead we act like a regular insertion
-			if(m_nCursorOffset == lineoff + length_CRLF)
+			if (m_nSelectionEnd == lineoff + length_CRLF)
 				erase_len = 0;
 
 			
 		}
 
-		if(!m_pTextDoc->replace_text(m_nCursorOffset, szText, nLength, erase_len))
+		if(!m_pTextDoc->replace_text(m_nSelectionEnd, szText, nLength, erase_len))
 			return 0;
 		
 		break;
@@ -794,9 +832,9 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 	}
 
 	// update cursor+selection positions
-	m_nCursorOffset  += nLength;
-	m_nSelectionStart = m_nCursorOffset;
-	m_nSelectionEnd   = m_nCursorOffset;
+	m_nSelectionEnd += nLength;
+	m_nSelectionStart = m_nSelectionEnd;
+	//m_nSelectionEnd   = m_nCursorOffset;
 	
 
 	// we altered the document, recalculate line+scrollbar information
@@ -813,11 +851,11 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 	if(nLength == 1 && !fReplaceSelection &&  line_length < MAX_LINE_LENGTH - 1)
 	{
 		
-		FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
+		FilePosToCharPos(m_nSelectionEnd, &m_CurrentCharPos);
 		if(szText[0] =='\n' )
 		{
 			wchar_t debug[50];
-			wsprintf(debug,L"newline m_nCursorOffset%d",m_nCursorOffset);
+			wsprintf(debug, L"newline m_nCursorOffset%d", m_nSelectionEnd);
 			OutputDebugString(debug);
 			Smeg(TRUE);
 		}
@@ -830,7 +868,7 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 			m_pTextDoc->init_linebuffer();
 
 			ResetLineCache( m_nCurrentLine_D);
-			InvalidateRange(m_nCursorOffset - 1, line_offset + line_length + 1 );
+			InvalidateRange(m_nSelectionEnd - 1, line_offset + line_length + 1);
 			RepositionCaret();
 
 		}
@@ -848,6 +886,7 @@ ULONG TextViewBase::EnterText(const TCHAR *szText, ULONG nLength)
 LONG TextViewBase::OnSetFocus(HWND hwndOld)
 {
 	//CreateCaret(m_hWnd, (HBITMAP)NULL, m_nCaretWidth, m_nLineHeight);
+	m_bFocused = true;
 	CreateMyCaret();
 	RepositionCaret();
 
@@ -859,6 +898,12 @@ LONG TextViewBase::OnKillFocus(HWND hwndNew)
 {
 	// if we are making a selection when we lost focus then
 	// stop the selection logic
+	OutputDebugString(L"OnKillFocus\n");
+	//RECT cliRect;//, zeroRect = {0,0,0,0};
+	//GetClientRect(this->m_hWnd, &cliRect);
+	//HBRUSH brush = CreateSolidBrush(m_colba);
+	//FillRect(m_hWnd, & cliRect, );
+	m_bFocused = false;
 	if(m_nSelectionMode != SEL_NONE)
 	{
 		OnLButtonUp(0, 0, 0);
@@ -886,11 +931,11 @@ LONG TextViewBase::OnLButtonDblClick(UINT nFlags, int mx, int my)
 
 	// move selection-start to start of word
 	MoveWordStart();
-	m_nSelectionStart = m_nCursorOffset;
+	m_nSelectionStart = m_nSelectionEnd;// m_nCursorOffset;
 
 	// move selection-end to end of word
 	MoveWordEnd();
-	m_nSelectionEnd = m_nCursorOffset;
+	//m_nSelectionEnd = m_nCursorOffset;
 
 	// update caret position
 	InvalidateRange(m_nSelectionStart, m_nSelectionEnd);
@@ -911,7 +956,7 @@ LONG TextViewBase::OnKeyDown(UINT nKeyCode, UINT nFlags)
 	bool fCtrlDown	= IsKeyPressed(VK_CONTROL);
 	bool fShiftDown	= IsKeyPressed(VK_SHIFT);
 	BOOL fAdvancing = FALSE;
-
+	long oldCursorOffset = m_nSelectionEnd;
 	//
 	//	Process the key-press. Cursor movement is different depending
 	//	on if <ctrl> is held down or not, so act accordingly
@@ -932,7 +977,7 @@ LONG TextViewBase::OnKeyDown(UINT nKeyCode, UINT nFlags)
 	case 'z': case 'Z':
 		
 		if(fCtrlDown && Undo())
-			NotifyParent(TVN_CHANGED);
+			/*NotifyParent(TVN_CHANGED);*/
 
 		return 0;
 
@@ -940,7 +985,7 @@ LONG TextViewBase::OnKeyDown(UINT nKeyCode, UINT nFlags)
 	case 'y': case 'Y':
 		
 		if(fCtrlDown && Redo()) 
-			NotifyParent(TVN_CHANGED);
+			//NotifyParent(TVN_CHANGED);
 
 		return 0;
 	// CTRL+C copy
@@ -1071,8 +1116,8 @@ LONG TextViewBase::OnKeyDown(UINT nKeyCode, UINT nFlags)
 	// Extend selection if <shift> is down
 	if(fShiftDown)
 	{		
-		InvalidateRange(m_nSelectionEnd, m_nCursorOffset);
-		m_nSelectionEnd	= m_nCursorOffset;
+		InvalidateRange(m_nSelectionEnd, oldCursorOffset);
+		//m_nSelectionEnd	= m_nCursorOffset;
 	}
 	// Otherwise clear the selection
 	else
@@ -1080,14 +1125,14 @@ LONG TextViewBase::OnKeyDown(UINT nKeyCode, UINT nFlags)
 		if(m_nSelectionStart != m_nSelectionEnd)
 			InvalidateRange(m_nSelectionStart, m_nSelectionEnd);
 
-		m_nSelectionEnd		= m_nCursorOffset;
-		m_nSelectionStart	= m_nCursorOffset;
+		//m_nSelectionEnd		= m_nCursorOffset;
+		m_nSelectionStart = m_nSelectionEnd;
 	}
 
 	// update caret-location (xpos, line#) from the offset
 	//UpdateCaretOffset(m_nCursorOffset, fAdvancing, &m_nCaretPosX, &m_nCurrentLine);
 	CHAR_POS cp;
-	FilePosToCharPos(m_nCursorOffset, &cp);
+	FilePosToCharPos(m_nSelectionEnd, &cp);
 	m_nCurrentLine_D = cp.logLine;
 	
 	// maintain the caret 'anchor' position *except* for up/down actions
@@ -1282,5 +1327,41 @@ LRESULT TextViewBase::HandleImeNotify(WPARAM wParam, LPARAM lParam)
 			}
 
 		return 0;
+}
+	//
+	//	Retrieve the specified range of text and copy it to supplied buffer
+	//	szDest must be big enough to hold nLength characters
+	//	nLength includes the terminating NULL
+	//
+ULONG TextViewBase::GetText(wchar_t *szDest, ULONG nStartOffset, ULONG nLength)
+{
+	ULONG copied = 0;
+
+	if (nLength > 1)
+	{
+		TextIterator itor = m_pTextDoc->iterate(nStartOffset);
+		copied = itor.gettext(szDest, nLength - 1);
+
+		// null-terminate
+		szDest[copied] = 0;
 	}
-	
+
+	return copied;
+}
+void TextViewBase::SetProperty_DrawFocusRect(bool value)
+{
+	m_bDrawFocusRect = value;
+}
+bool TextViewBase::GetProperty_DrawFocusRect(void)
+{
+	return m_bDrawFocusRect;
+
+}
+HWND TextViewBase::GetHwnd()
+{
+	return m_hWnd;
+}
+VOID TextViewBase::SetHwnd(HWND hWnd)
+{
+	m_hWnd = hWnd;
+}

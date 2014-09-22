@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 #include "sequence.h"
 #define STOP int stop = 1
 //#define DEBUG_SEQUENCE
@@ -263,7 +264,7 @@ sequence::buffer_control* sequence::alloc_modifybuffer (size_t maxsize)
 bool sequence::import_buffer (const seqchar *buf, size_t len, size_t *buffer_offset)
 {
 	buffer_control *bc;
-	
+	//assert(modifybuffer_id > 0);
 	// get the current modify-buffer
 	bc = buffer_list[modifybuffer_id];
 

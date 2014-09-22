@@ -20,11 +20,11 @@ extern "C" {
 //BOOL	 InitTextView();
 //HWND	 CreateTextView(HWND hwndParent);
 
-BOOL	 InitMnTextView();
-HWND	 CreateMnTextView(HWND hwndParent);
-HWND	 CreateMnConvertTextView(HWND hwndParent);
-
-COLORREF RealizeColour(COLORREF col);
+BOOL		InitMnTextView();
+HWND		CreateMnTextView(HWND hwndParent);
+HWND		CreateMnConvertTextView(HWND hwndParent);
+BOOL		PutMnWhiteToMemory();
+COLORREF	RealizeColour(COLORREF col);
 
 typedef struct STATISTIC_
 {
@@ -356,6 +356,9 @@ typedef struct REPLACE_OPTION
 
 #define TextView_SetResModule(hwndTV, module) \
 	SendMessage((hwndTV), TXM_SETRESMODULE, 0, (LPARAM)(module))
+
+#define TextView_GetText(hwndTV, buffer, bufferLenth) \
+	SendMessage((hwndTV), TXM_GETTEXT, 0, 0)
 
 #define TextView_GetTextLen(hwndTV) \
 	SendMessage((hwndTV), TXM_GETTEXTLEN, 0, 0)

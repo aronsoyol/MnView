@@ -8,7 +8,7 @@ bool LoadUiFont (HMODULE hModule)
 
 	if(hModule)
 	{
-		hRSrc	= FindResource(hModule, MAKEINTRESOURCE(IDR_RT_FONT1), L"RT_FONT");
+		//hRSrc	= FindResource(hModule, MAKEINTRESOURCE(IDR_RT_FONT1), L"RT_FONT");
 	}
 	else return false;
 	HGLOBAL	hGlobal;

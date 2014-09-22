@@ -1,23 +1,29 @@
 ﻿#include "MnTextView.h"	
 //#include "../verui/verui.h"
-#include "../MnTextDotNet/resource.h"
+//#include "../MnTextDotNet/resource.h"
+//MnCursor			MnTextView::m_mnCursor;
+MnStaticResource	MnTextView::m_Res;
 MnTextView::MnTextView(HWND hwnd):
-	TextViewBase	(hwnd),
-	//m_visualLineView(hwnd,m_pTextDoc)
-	m_visualLineView(this),
-	m_fMenuVisible(0),
-	m_hResModule(0)
+	TextViewBase		(hwnd		),
+	m_visualLineView	(this		),
+	m_fMenuVisible		(0			),
+	m_hResModule		(0			),
+	m_hMainModule		(0			),
+	m_pFontManager		(0			),
+	m_direction			(WD_VERTICAL),
+	m_nScrollPos		(0			),
+	m_nScrollMax		(0			),
+	m_MarginBottom		(Margin		),
+	m_MarginTop			(Margin		),
+	m_MarginRight		(Margin		),
+	m_MarginLeft		(Margin		)
 {
-	m_hWnd			= hwnd		;
-	m_isLButtonDown	= 0			;
-	m_bufLen		= 0			;
-	m_buffer		= NULL		;
-	m_direction		= WD_VERTICAL;
-	m_nScrollPos	= 0;
-	m_nScrollMax	= 0;
-	setMargin(Margin);
+	//setMargin(Margin);
 	m_pFontManager	= new MNFontManager();
-//	m_pMenu			= 0;//new MNUiPopupMenu(hwnd);
+
+	m_hMainModule	= GetModuleHandle(0);
+	m_colBack		= GetSysColor(COLOR_WINDOW);
+	m_colFore		= GetSysColor(COLOR_WINDOWTEXT);
 
 }
 MnTextView::~MnTextView(void)
@@ -52,7 +58,7 @@ LONG MnTextView::ClearFile()
 
 	m_nSelectionStart	= 0;
 	m_nSelectionEnd		= 0;
-	m_nCursorOffset		= 0;
+	//m_nCursorOffset		= 0;
 	m_CurrentCharPos	= CHAR_POS();
 	//m_caretCharPos		= CHAR_POS();
 
@@ -99,7 +105,7 @@ LONG MnTextView::OnSetText(WCHAR* buffer, ULONG length)
 		m_nScrollPos		= 0;
 		m_nSelectionStart	= 0;
 		m_nSelectionEnd		= 0;
-		m_nCursorOffset		= 0;
+		//m_nCursorOffset		= 0;
 
 		//ResetLineCache();
 		//UpdateMetrics();
@@ -130,7 +136,7 @@ LONG MnTextView::OpenFile(TCHAR *szFileName)
 
 		m_nSelectionStart	= 0;
 		m_nSelectionEnd		= 0;
-		m_nCursorOffset		= 0;
+		//m_nCursorOffset		= 0;
 
 		ResetLineCache();
 		UpdateMetrics();
@@ -157,7 +163,7 @@ LONG MnTextView::ImportFile(WCHAR *szFileName, int conver_type)
 
 		m_nSelectionStart	= 0;
 		m_nSelectionEnd		= 0;
-		m_nCursorOffset		= 0;
+		//m_nCursorOffset		= 0;
 
 		ResetLineCache();
 		UpdateMetrics();
@@ -169,11 +175,12 @@ LONG MnTextView::ImportFile(WCHAR *szFileName, int conver_type)
 LONG MnTextView::OnPaint()
 {
 	RECT updateRect;
-	RECT cliRect,left,right,top,bottom;
-	GetClientRect(m_hWnd, &cliRect);
+	RECT left, right, top, bottom, cliRect = { 0 };
+	if (!GetClientRect(m_hWnd, &cliRect))
+		return 0;
 
 
-	
+
 	GetUpdateRect(m_hWnd, &updateRect, FALSE);
 	PAINTSTRUCT ps;
 	BeginPaint(m_hWnd, &ps);
@@ -182,7 +189,7 @@ LONG MnTextView::OnPaint()
 	//SetRect(
 	//HRGN hrgnClient  = CreateRectRgnIndirect(&client);
 	//SelectClipRgn(
-	if(m_direction == WD_VERTICAL)
+	if (m_direction == WD_VERTICAL)
 	{
 		OnDrawV(&ps.hdc, updateRect);
 	}
@@ -190,18 +197,27 @@ LONG MnTextView::OnPaint()
 	{
 		//OnDrawH(&ps.hdc);
 	}
-	
-	HBRUSH brush = CreateSolidBrush( RGB(255, 255, 255));
-	SetRect(&left , 0, 0, m_MarginLeft, cliRect.bottom);
-	SetRect(&right, cliRect.right - m_MarginRight, 0, cliRect.right , cliRect.bottom);
-	SetRect(&top	,0,0,cliRect.right,m_MarginTop);
-	SetRect(&bottom	,0,cliRect.bottom - m_MarginBottom,cliRect.right, cliRect.bottom);
 
-	FillRect(ps.hdc, &left	,brush);
-	FillRect(ps.hdc, &right	,brush);
-	FillRect(ps.hdc, &top	,brush);
-	FillRect(ps.hdc, &bottom,brush);
+	HBRUSH brush = CreateSolidBrush(m_colBack);
+	SetRect(&left, 0, 0, m_MarginLeft, cliRect.bottom);
+	SetRect(&right, cliRect.right - m_MarginRight, 0, cliRect.right, cliRect.bottom);
+	SetRect(&top, 0, 0, cliRect.right, m_MarginTop);
+	SetRect(&bottom, 0, cliRect.bottom - m_MarginBottom, cliRect.right, cliRect.bottom);
 
+	FillRect(ps.hdc, &left, brush);
+	FillRect(ps.hdc, &right, brush);
+	FillRect(ps.hdc, &top, brush);
+	FillRect(ps.hdc, &bottom, brush);
+	if (m_bFocused && m_bDrawFocusRect)
+	{
+
+		DrawFocusRect(ps.hdc, &cliRect);
+		OutputDebugString(L"Lost focus and paint\n");
+	}
+	else
+	{
+		OutputDebugString(L"Lost focus and paint\n");
+	}
 	DeleteObject(brush);
 	EndPaint(m_hWnd, &ps);
 	//wchar_t debug [50];
@@ -491,8 +507,16 @@ LONG MnTextView::OnSetFont(HFONT hFont)
 //}
 LONG MnTextView::OnSize(UINT nFlags, int width, int height)
 {
-	RECT cliRect;
-	GetClientRect(m_hWnd, &cliRect);
+	
+	RECT cliRect = {0};
+	BOOL ret = GetClientRect(m_hWnd, &cliRect);
+	if (!ret)
+	{
+		DWORD lastError = GetLastError();
+		assert(ret);
+		return
+			0;
+	}
 	bool need_refresh = false;
 	if(m_direction == WD_VERTICAL && height - getMarginTB() != m_visualLineView.getWidth())
 	{
@@ -536,7 +560,7 @@ LONG MnTextView::OnSize(UINT nFlags, int width, int height)
 VOID MnTextView::RepositionCaret()
 {
 	CHAR_POS cp;
-	FilePosToCharPos(m_nCursorOffset,&cp);
+	FilePosToCharPos(m_nSelectionEnd,&cp);
 	if(cp != m_CurrentCharPos)
 	{
 		m_CurrentCharPos = cp;
@@ -563,6 +587,7 @@ BOOL MnTextView::MouseCoordToCharPos(int mx, int my, __out CHAR_POS* charPos, in
 LONG MnTextView::OnSetFocus(HWND hwndOld)
 {
 	//CreateCaret(m_hWnd, (HBITMAP)NULL, m_nCaretWidth, m_nLineHeight);
+	m_bFocused = true;
 	CreateMyCaret();
 	updateCaretPos(m_CurrentCharPos);
 
@@ -570,10 +595,34 @@ LONG MnTextView::OnSetFocus(HWND hwndOld)
 	RefreshWindow();
 	return 0;
 }
+LONG MnTextView::OnKillFocus(HWND hwndNew)
+{
+	// if we are making a selection when we lost focus then
+	// stop the selection logic
+	OutputDebugString(L"OnKillFocus\n");
+	//RECT cliRect;//, zeroRect = {0,0,0,0};
+	//GetClientRect(this->m_hWnd, &cliRect);
+	//HBRUSH brush	= CreateSolidBrush(m_colBack);
+	//HDC hdc			= GetDC(m_hWnd);
+	//FillRect(hdc, &cliRect, brush);
+	//DeleteObject(hdc);
+	//DeleteObject(brush);
+	m_bFocused = false;
+	if (m_nSelectionMode != SEL_NONE)
+	{
+		OnLButtonUp(0, 0, 0);
+	}
+
+	HideCaret(m_hWnd);
+	DestroyCaret();
+	RefreshWindow();
+	return 0;
+}
 LONG MnTextView::OnKeyDown(UINT nKeyCode, UINT nFlags)
 {
 	bool fCtrlDown	= IsKeyPressed(VK_CONTROL);
 	bool fShiftDown	= IsKeyPressed(VK_SHIFT);
+	ULONG oldSelEnd = m_nSelectionEnd;
 	switch(nKeyCode)
 	{
 	case VK_UP:
@@ -622,8 +671,8 @@ LONG MnTextView::OnKeyDown(UINT nKeyCode, UINT nFlags)
 	// Extend selection if <shift> is down
 	if(fShiftDown)
 	{		
-		InvalidateRange(m_nSelectionEnd, m_nCursorOffset);
-		m_nSelectionEnd	= m_nCursorOffset;
+		InvalidateRange(oldSelEnd, m_nSelectionEnd);
+		//m_nSelectionEnd	= m_nCursorOffset;
 		NotifyParent( TVN_SELECTION_CHANGED);
 	}
 	// Otherwise clear the selection
@@ -632,8 +681,8 @@ LONG MnTextView::OnKeyDown(UINT nKeyCode, UINT nFlags)
 		if(m_nSelectionStart != m_nSelectionEnd)
 			InvalidateRange(m_nSelectionStart, m_nSelectionEnd);
 
-		m_nSelectionEnd		= m_nCursorOffset;
-		m_nSelectionStart	= m_nCursorOffset;
+		//m_nSelectionEnd		= m_nCursorOffset;
+		m_nSelectionStart = m_nSelectionEnd;
 		NotifyParent( TVN_SELECTION_CHANGED);
 	}
 
@@ -747,7 +796,7 @@ LONG MnTextView::OnLButtonDown(UINT nFlags, int mx, int my)
 			// reset cursor and selection offsets to the same location
 			m_nSelectionStart	= nFileOff;
 			m_nSelectionEnd		= nFileOff;
-			m_nCursorOffset		= nFileOff;
+			//m_nCursorOffset		= nFileOff;
 			m_visualLineView.setSelection(CHAR_POS(),CHAR_POS());
 		}
 		else
@@ -757,7 +806,7 @@ LONG MnTextView::OnLButtonDown(UINT nFlags, int mx, int my)
 			
 			// extend selection to cursor
 			m_nSelectionEnd		= nFileOff;
-			m_nCursorOffset		= nFileOff;
+			//m_nCursorOffset		= nFileOff;
 		}
 
 		if(IsKeyPressed(VK_MENU))
@@ -927,7 +976,7 @@ LONG MnTextView::OnMouseMove(UINT nFlags, int mx, int my)
 			ULONG linelen;
 			m_pTextDoc->lineinfo_from_lineno(nLineNo, 0, &linelen, 0, 0);
 
-			m_nCursorOffset	= nFileOff;
+			m_nSelectionEnd = nFileOff;
 
 			//if(m_nSelectionMode == SEL_MARGIN)
 			//{
@@ -973,21 +1022,27 @@ LONG MnTextView::OnMouseMove(UINT nFlags, int mx, int my)
 	else
 	{
 		//HCURSOR hCursor = LoadCursor(GetModuleHandle(L"MnCtrlDotNet"), MAKEINTRESOURCE( IDC_IBEAMV));
-		HCURSOR hCursor = 0;
-		if(m_hResModule)
-		{
-			hCursor= LoadCursor(m_hResModule, MAKEINTRESOURCE( IDC_IBEAMV));
-		}
-		else
-		{
-			hCursor= LoadCursor(0, MAKEINTRESOURCE( IDC_IBEAM));
-		}
-		if(hCursor)
-				SetCursor(hCursor);
+		//HCURSOR hCursor = 0;
+		//wchar_t fileName[MAX_PATH];
+		//if(m_hResModule)
+		//{
+		//	
+		//	hCursor= LoadCursor(m_hResModule, MAKEINTRESOURCE( IDC_IBEAMV));
+		//	GetModuleFileName(m_hResModule, fileName, MAX_PATH -1);
+		//}
+		//else
+		//{
+		//	hCursor= LoadCursor(0, MAKEINTRESOURCE( IDC_IBEAM));
+		//}
+		//if(m_hCursor)
+			SetCursor(m_Res.GetCurosr());
+
 	}
+#ifdef _DEBUG
 	WCHAR b[50];
-	wsprintf(b,L"OnMouseMove x:%3d, y:%3d\n", mx, my);
+	wsprintf(b,L"OnMouseMove selstart=%d, selend=%d\n", m_nSelectionStart, m_nSelectionEnd);
 	OutputDebugString(b);
+#endif
 	return 0;
 }
 //
@@ -1029,7 +1084,7 @@ void MnTextView::Smeg(BOOL fAdvancing)
 
 	m_visualLineView.setLineCount(m_nLineCount);
 	
-	FilePosToCharPos(m_nCursorOffset ,&m_CurrentCharPos);
+	FilePosToCharPos(m_nSelectionEnd, &m_CurrentCharPos);
 	m_nCurrentLine_D = m_CurrentCharPos.logLine;
 	updateCaretPos(m_CurrentCharPos);
 
@@ -1496,26 +1551,26 @@ LONG MnTextView::OnHScroll(UINT nSBCode, UINT nPos)
 }
 VOID MnTextView::MoveWordPrev()
 {
-	int old = m_nCursorOffset;
+	int old = m_nSelectionEnd;
 	MoveWordStart();
 	int i	= 1;
-	while(m_nCursorOffset >= old && old > 0 )
+	while (m_nSelectionEnd >= old && old > 0)
 	{
-		m_nCursorOffset -= i++;
-		FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
+		m_nSelectionEnd -= i++;
+		FilePosToCharPos(m_nSelectionEnd, &m_CurrentCharPos);
 		MoveWordStart();
 	}
 	RepositionCaret();
 }
 VOID MnTextView::MoveWordNext()
 {
-	int old = m_nCursorOffset;
+	int old = m_nSelectionEnd;
 	MoveWordEnd();
-	int en	= m_nCursorOffset;
+	int en = m_nSelectionEnd;
 	if(en <= old)
 	{
 	
-		m_nCursorOffset = min(m_nCursorOffset + 2 , m_pTextDoc->charCount());
+		m_nSelectionEnd = min(m_nSelectionEnd + 2, m_pTextDoc->charCount());
 
 		MoveWordStart();
 	}
@@ -1526,20 +1581,20 @@ VOID MnTextView::MoveWordStart()
 {
 	CHAR_POS charPos;
 	m_visualLineView.moveToWordStart(m_CurrentCharPos, &charPos);
-	CharPosToFilePos(charPos, &m_nCursorOffset);
+	CharPosToFilePos(charPos, &m_nSelectionEnd);
 	m_CurrentCharPos = charPos;
 }
 VOID MnTextView::MoveWordEnd()
 {
 	CHAR_POS charPos;
 	m_visualLineView.moveToWordEnd(m_CurrentCharPos, &charPos);
-	CharPosToFilePos(charPos, &m_nCursorOffset);
+	CharPosToFilePos(charPos, &m_nSelectionEnd);
 	m_CurrentCharPos = charPos;
 }
 VOID MnTextView::MoveCharPrev(bool bStopTail, bool bUpdateCaretXY )
 {
 	CHAR_POS prevCp	= m_CurrentCharPos;
-	ULONG filepos	= m_nCursorOffset;
+	ULONG filepos = m_nSelectionEnd;
 	//FilePosToCharPos(m_nCursorOffset + m_nCursorTrailing, &cp);
 	if(m_CurrentCharPos.index + m_CurrentCharPos.trailing > 0)
 	{
@@ -1553,7 +1608,7 @@ VOID MnTextView::MoveCharPrev(bool bStopTail, bool bUpdateCaretXY )
 	}
 	CharPosToFilePos(prevCp, &filepos);
 	m_CurrentCharPos	= prevCp;
-	m_nCursorOffset		= filepos;
+	m_nSelectionEnd = filepos;
 	m_nCurrentLine_D	= m_CurrentCharPos.logLine;
 	if(bUpdateCaretXY)
 		updateCaretPos(m_CurrentCharPos);
@@ -1561,7 +1616,7 @@ VOID MnTextView::MoveCharPrev(bool bStopTail, bool bUpdateCaretXY )
 VOID MnTextView::MoveCharNext(bool bStopHead, bool bUpdateCaretXY )
 {
 	CHAR_POS nextCp	= m_CurrentCharPos;
-	ULONG filepos	= m_nCursorOffset;
+	ULONG filepos = m_nSelectionEnd;
 	//FilePosToCharPos(m_nCursorOffset + m_nCursorTrailing, &cp);
 	if(m_CurrentCharPos.index + m_CurrentCharPos.trailing 
 		<  m_visualLineView.getCharCount_Without_CRLF(m_CurrentCharPos.logLine))
@@ -1576,7 +1631,7 @@ VOID MnTextView::MoveCharNext(bool bStopHead, bool bUpdateCaretXY )
 	}
 	CharPosToFilePos(nextCp, &filepos);
 	m_CurrentCharPos	= nextCp;
-	m_nCursorOffset		= filepos;
+	m_nSelectionEnd = filepos;
 	m_nCurrentLine_D	= m_CurrentCharPos.logLine;
 	if(bUpdateCaretXY)
 		updateCaretPos(m_CurrentCharPos);
@@ -1586,7 +1641,7 @@ VOID MnTextView::MoveLineUp(int numLines)
 	CHAR_POS outCp;
 	if(m_visualLineView.moveToVLinePrev(m_CurrentCharPos,numLines,&outCp))
 	{
-		CharPosToFilePos(outCp, &m_nCursorOffset);
+		CharPosToFilePos(outCp, &m_nSelectionEnd);
 		m_CurrentCharPos	= outCp;
 		m_nCurrentLine_D	= m_CurrentCharPos.logLine;
 		//updateCaretPos(m_CurrentCharPos);
@@ -1599,7 +1654,7 @@ VOID MnTextView::MoveLineDown(int numLines)
 	CHAR_POS outCp;
 	if(m_visualLineView.moveToVLineNext(m_CurrentCharPos,numLines,&outCp))
 	{
-		CharPosToFilePos(outCp, &m_nCursorOffset);
+		CharPosToFilePos(outCp, &m_nSelectionEnd);
 		m_CurrentCharPos	= outCp;
 		m_nCurrentLine_D	= m_CurrentCharPos.logLine;
 		ScrollToCaret();
@@ -1611,7 +1666,7 @@ VOID MnTextView::MoveLineStart(ULONG lineNo, bool bUpdateCaret){
 	if(m_visualLineView.moveToLineStart(m_CurrentCharPos, &cp))
 	{
 		m_CurrentCharPos = cp;
-		CharPosToFilePos(cp, &m_nCursorOffset);
+		CharPosToFilePos(cp, &m_nSelectionEnd);
 		if(bUpdateCaret)
 			updateCaretPos(m_CurrentCharPos);
 	}
@@ -1622,7 +1677,7 @@ VOID MnTextView::MoveLineEnd(ULONG lineNo, bool bUpdateCaret )
 	if(m_visualLineView.moveToLineEnd(m_CurrentCharPos, &cp))
 	{
 		m_CurrentCharPos = cp;
-		CharPosToFilePos(cp, &m_nCursorOffset);
+		CharPosToFilePos(cp, &m_nSelectionEnd);
 		if(bUpdateCaret)
 			updateCaretPos(m_CurrentCharPos);
 	}

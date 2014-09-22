@@ -6,7 +6,7 @@ int MNFont::s_count = 0;
 MNFont::MNFont(void):
 	m_fontName	(L"arongsuyila"),
 	m_size  	(20),
-	m_bold  	(false),
+	m_bold		(FW_DONTCARE),
 	m_italic 	(false),
 	m_underLine	(false),
 	m_hFont		(0),
@@ -40,7 +40,7 @@ MNFont::MNFont(const MNFont& src):
 {
 	s_count++;	//createFont();
 }
-bool MNFont::like(const MNText& name, UINT size, bool bold, bool italic, bool underLine, bool rotate)
+bool MNFont::like(const MNText& name, UINT size, LONG bold, bool italic, bool underLine, bool rotate)
 {
 	if( m_size		== size
 	 && m_bold		== bold
@@ -86,7 +86,7 @@ bool MNFont::calcMetrics(HDC hdc)
 	return false;
 }
 
-void MNFont::init(const MNText& name, UINT size, bool bold, bool italic, bool underLine, bool rotate )
+void MNFont::init(const MNText& name, UINT size, LONG bold, bool italic, bool underLine, bool rotate)
 {
 	freeResourse();
 	m_fontName	= name ;
@@ -160,7 +160,7 @@ void MNFont::freeResourse()
 
 bool MNFont::createFont()
 {	
-	int weight	= m_bold?FW_BOLD:FW_DONTCARE;
+	//int weight	= m_bold?FW_BOLD:FW_DONTCARE;
 	int size	= m_size;
 	int angle	= 0;
 	WCHAR face[50];
@@ -180,7 +180,7 @@ bool MNFont::createFont()
 		0,
 		0,
 		0,
-		weight,
+		m_bold,
 		m_italic,
 		0,
 		0,

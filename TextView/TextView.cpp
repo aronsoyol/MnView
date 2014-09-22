@@ -30,7 +30,7 @@
 #endif
 
 #pragma comment(lib, "comctl32.lib")
-
+//static MnCursor mnCursor;
 //
 //	Constructor for TextView class
 //
@@ -81,13 +81,13 @@ BOOL InitMnTextView()
 	//HCURSOR  cursor = LoadCursor (GetModuleHandle(0), MAKEINTRESOURCE(132));
 	//Window class for the main application parent window
 	wcx.cbSize			= sizeof(wcx);
-	wcx.style			= /*CS_HREDRAW | CS_VREDRAW |*/ CS_DBLCLKS | CS_DROPSHADOW;
+	wcx.style			= /*CS_HREDRAW | CS_VREDRAW |*/ CS_DBLCLKS /*| CS_DROPSHADOW*/;
 	wcx.lpfnWndProc		= MnTextViewWndProc;
 	wcx.cbClsExtra		= 0;
 	wcx.cbWndExtra		= sizeof(MnTextView *);
 	wcx.hInstance		= (HINSTANCE)GetModuleHandle(0);
 	wcx.hIcon			= 0;
-	wcx.hCursor			= LoadCursor (NULL, IDC_ARROW);
+	wcx.hCursor			= LoadCursor(NULL, IDC_ARROW);
 	wcx.hbrBackground	= (HBRUSH)0;		//NO FLICKERING FOR US!!
 	wcx.lpszMenuName	= 0;
 	wcx.lpszClassName	= MNTEXTVIEW_CLASS;	
@@ -132,7 +132,8 @@ HWND CreateMnConvertTextView(HWND hwndParent)
 		hwndParent, 
 		0, 
 		GetModuleHandle(0), 
-		0);
+		0
+	);
 		UpdateWindow(me);
 	TextView_Clear(me);
 	ShowWindow(me, SW_SHOW);

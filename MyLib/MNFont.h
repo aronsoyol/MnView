@@ -36,8 +36,8 @@ public:
 	
 	void	freeResourse();
 	bool	createFont();
-	bool	like(const MNText& name, UINT size = 20, bool bold = false, bool italic = false, bool underLine = false, bool rotate = false);
-	void	init(const MNText& name, UINT size = 20, bool bold = false, bool italic = false, bool underLine = false, bool rotate = false);
+	bool	like(const MNText& name, UINT size = 20, LONG bold = FW_DONTCARE, bool italic = false, bool underLine = false, bool rotate = false);
+	void	init(const MNText& name, UINT size = 20, LONG bold = FW_DONTCARE, bool italic = false, bool underLine = false, bool rotate = false);
 	void	init(HFONT hFont);
 	bool	calcMetrics(HDC hdc);
 	bool	operator == (const MNFont&);

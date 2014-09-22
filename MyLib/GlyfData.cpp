@@ -1155,7 +1155,11 @@ void GlyfData::drawSubLine(HDC *pDC, int lineIndex,int x,int y)
 
 	if(partialSelected || allSelected)
 	{
-		HBRUSH bBrush	= CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
+		HBRUSH bBrush = 0;// CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
+		if (*m_pFocused)
+			bBrush = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
+		else
+			bBrush = CreateSolidBrush(GetSysColor(COLOR_GRAYTEXT));
 		SelectClipRgn(*pDC,selRgn);
 		FillRect(*pDC, &selRect,bBrush);
 		drawSelection(pDC, x, y, stCharPos, enCharPos, runIndex, glyphPos);
@@ -2408,7 +2412,10 @@ HRESULT GlyfData::drawChars(HDC *pDC, int dx, int dy, int stCharPos, int enCharP
 		}
 		else
 			col = m_textAttr[clustPos].fgColor;
-		SetTextColor(*pDC,col);
+		if (m_pForeColor)
+			SetTextColor(*pDC, *m_pForeColor);
+		else
+			SetTextColor(*pDC, col);
 
 
 		hr = ScriptTextOut(
@@ -2489,7 +2496,11 @@ HRESULT GlyfData::drawSelection(HDC *pDC, int dx,int dy,int stCharPos,int enChar
 	SelectObject(*pDC,pFont->m_hFont);
 	//SetBkMode(*pDC, OPAQUE);
 	//SetBkColor(*pDC, GetSysColor(COLOR_HIGHLIGHT));
+	
 	SetTextColor(*pDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+	//if (*m_pFocused)
+	//else
+	//	SetTextColor(*pDC, GetSysColor(COLOR_GRAYTEXT));
 	
 
 	HRESULT hr;
@@ -3069,7 +3080,7 @@ HRESULT GlyfData::shapeAndPlaceRun(RUN *run, HDC *pDC, WCHAR* pText, LONG length
 		HRESULT			hr2	= ScriptGetFontProperties(*pDC, &pFont->m_cache, &FontProperty);
 	
 		int realsize = this->m_GlyphBufferLen	- m_GlyphCount;
-		int needsize = (int)run->charCount *1.5 + 16 + 20; // in document fit size is char_count * 1.5 + 16
+		int needsize = (int)((float)run->charCount * 1.5f + 16 + 20); // in document fit size is char_count * 1.5 + 16
 		int fit_size = realsize > needsize ? needsize : realsize;
 
 		hr = ScriptShape(
@@ -3129,6 +3140,7 @@ HRESULT GlyfData::shapeAndPlaceRun(RUN *run, HDC *pDC, WCHAR* pText, LONG length
 				MNText mnfontName(fontname);
 				LOGFONT lf;
 				GetObject(pFont->m_hFont, sizeof(lf), &lf);
+				//lf
 				bool ratate =false;
 				if(run->scriptAnalyze.eScript == 17)
 				{

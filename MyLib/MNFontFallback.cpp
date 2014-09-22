@@ -45,6 +45,10 @@ bool MNFontFallback::getFallbackFont(int eScript ,WCHAR* pFontNameBuffer, int bu
 			}
 			else
 			{
+				if (i == 0)
+				{
+					int haha = 0;
+				}
 				lstrcpy(pFontNameBuffer,pFontList[i].fontName);
 				return true;
 			}
@@ -56,6 +60,10 @@ bool MNFontFallback::getFallbackFont(int eScript ,WCHAR* pFontNameBuffer, int bu
 }
 MNFontFallback::~MNFontFallback(void)
 {
-	delete[] pFontList;
+	if (length > 1)
+		delete[] pFontList;
+	else if (length == 1)
+		delete pFontList;
+
 	delete[] comment;
 }

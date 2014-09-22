@@ -523,7 +523,7 @@ public:
 			if(!mach_case)
 			{
 				
-				if(MAX_LINE_LENGTH - offset_buf >= m_find_text_len && wcsnicmp (m_pFind_text, tmpPtr, m_find_text_len) == 0 )
+				if(MAX_LINE_LENGTH - offset_buf >= m_find_text_len && _wcsnicmp (m_pFind_text, tmpPtr, m_find_text_len) == 0 )
 				{
 					m_next_offset = i - 1;
 					return i;

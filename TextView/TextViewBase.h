@@ -12,64 +12,6 @@
 #define MODE_INSERT		1
 #define MODE_OVERWRITE	2
 
-//typedef struct _TVPRINTINFO
-//{
-//	int			textSizePoint;
-//	LPCWSTR*   	pDocName;
-//	DOCINFO		di;
-//} TVPRINTINFO;
-
-//
-//	TextView Window Messages defined here
-//
-//#define TXM_BASE				(WM_USER)
-//#define TXM_OPENFILE			(TXM_BASE + 0 )
-//#define TXM_CLEAR				(TXM_BASE + 1 )
-//#define TXM_SETLINESPACING		(TXM_BASE + 2 )
-//#define TXM_ADDFONT				(TXM_BASE + 3 )
-//#define TXM_SETCOLOR			(TXM_BASE + 4 )
-//#define TXM_GETCOLOR			(TXM_BASE + 5 )
-//#define TXM_SETSTYLE			(TXM_BASE + 6 )
-//#define TXM_GETSTYLE			(TXM_BASE + 7 )
-//#define TXM_SETCARETWIDTH		(TXM_BASE + 8 )
-//#define TXM_SETIMAGELIST		(TXM_BASE + 9 )
-//#define TXM_SETLONGLINE			(TXM_BASE + 10)
-//#define TXM_SETLINEIMAGE		(TXM_BASE + 11)
-//#define TXM_GETFORMAT			(TXM_BASE + 12)
-//#define TXM_UNDO				(TXM_BASE + 13)
-//#define TXM_REDO				(TXM_BASE + 14)
-//#define TXM_CANUNDO				(TXM_BASE + 15)
-//#define TXM_CANREDO				(TXM_BASE + 16)
-//#define TXM_GETSELSIZE			(TXM_BASE + 17)
-//#define TXM_SETSELALL			(TXM_BASE + 18)
-//#define TXM_GETCURPOS			(TXM_BASE + 19)
-//#define TXM_GETCURLINE			(TXM_BASE + 20)
-//#define TXM_GETCURCOL			(TXM_BASE + 21)
-//#define TXM_SETEDITMODE			(TXM_BASE + 22)
-//#define TXM_GETEDITMODE			(TXM_BASE + 23)
-//#define TXM_SETCONTEXTMENU		(TXM_BASE + 24)
-//#define TXM_SAVEFILE			(TXM_BASE + 25)
-//#define TXM_SETFONTFACE			(TXM_BASE + 26)
-//#define TXM_GETCURLINE_D		(TXM_BASE + 27)
-//#define TXM_GETCURLINE_V		(TXM_BASE + 28)
-//#define TXM_PRINT				(TXM_BASE + 29)
-//#define TXM_FIND_INIT			(TXM_BASE + 30)
-//#define TXM_FIND_GETTEXTLENGTH	(TXM_BASE + 31)
-//#define TXM_FIND				(TXM_BASE + 33)
-//#define TXM_REPLACE				(TXM_BASE + 34)
-//#define TXM_GETSELTEXT			(TXM_BASE + 35)
-//#define TXM_GETSELSTART			(TXM_BASE + 36)
-//#define TXM_GETSELEND			(TXM_BASE + 37)
-////
-////	TextView Notification Messages defined here - 
-////	sent via the WM_NOTIFY message
-////
-//#define TVN_BASE				(WM_USER)
-//#define TVN_CURSOR_CHANGE		(TVN_BASE + 0)
-//#define TVN_SELECTION_CHANGE	(TVN_BASE + 1)
-//#define TVN_EDITMODE_CHANGE		(TVN_BASE + 2)
-//#define TVN_CHANGED				(TVN_BASE + 3)
-//#define TVN_CHANGING			(TVN_BASE + 4)
 
 enum SELMODE { SEL_NONE, SEL_NORMAL, SEL_MARGIN, SEL_BLOCK };
 LONG GetTrackPos32(HWND hwnd, int nBar);
@@ -99,7 +41,7 @@ protected:
 	ULONG		m_nCurrentLine_D;
 	ULONG		m_nSelectionStart;
 	ULONG		m_nSelectionEnd;
-	ULONG		m_nCursorOffset;
+	//ULONG		m_nCursorOffset;
 	CHAR_POS	m_CurrentCharPos;
 
 
@@ -119,11 +61,13 @@ protected:
 	
 
 	HMENU		m_hUserMenu;
-	
+	bool		m_bFocused;
+	bool		m_bDrawFocusRect;
 public:
 	TextViewBase(HWND hwnd);
 	virtual ~TextViewBase(void);
 	virtual LONG WINAPI WndProc(UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual bool HandleWndProc(UINT msg, WPARAM wParam, LPARAM lParam, LONG* pResult = 0);
 protected:
 
 	//
@@ -184,7 +128,7 @@ protected:
 	virtual LONG		ClearFile()					= 0;
 	virtual void		ResetLineCache()			= 0;
 	virtual void		ResetLineCache(ULONG line)	{};
-	virtual ULONG		GetText(TCHAR *szDest, ULONG nStartOffset, ULONG nLength) ;
+	
 	
 	//
 	//	Cursor/Selection
@@ -298,4 +242,16 @@ protected:
 	virtual LONG		OnGetConvertTypes(convert_type* convert_looup);
 	virtual	LONG		OnSetResModule(HMODULE)				= 0;
 	virtual LONG		OnGetTextLen()						= 0;
+	
+	virtual LONG		OnMsg_EM_GETSEL(ULONG *pStart, ULONG * pEnd) = 0;
+	virtual	LONG		OnMsg_EM_SETSEL(long nStart, long nEnd) = 0;
+	
+	public:
+	HWND GetHwnd();
+	VOID SetHwnd(HWND hWnd);
+	virtual	ULONG		GetText(wchar_t *szDest, ULONG nStartOffset, ULONG nLength);
+	virtual void		SetProperty_DrawFocusRect(bool);
+	virtual bool		GetProperty_DrawFocusRect(void);
+
+
 };

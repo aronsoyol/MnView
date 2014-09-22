@@ -18,7 +18,18 @@ public:
 	{
 		m_usage ++;
 	}
-
+	void initialize(int line, ULONG fileOffset, WCHAR* text, int len, MNFontManager* pFm, COLORREF* pForeColor, bool* pFocused)
+	{
+		m_usage			= 1;
+		m_lineIndex		= line;
+		m_fileOffset	= fileOffset;
+		m_length_CRLF	= len;
+		//len				= m_length_CRLF - CRLF_size(text, len);
+		m_pFontManager	= pFm;
+		m_pForeColor	= pForeColor;
+		m_pFocused		= pFocused;
+		GlyfData::initialize(text, len);
+	}
 	void initialize(int line , ULONG fileOffset, WCHAR* text, int len, MNFontManager* pFm)
 	{
 		m_usage			= 1;

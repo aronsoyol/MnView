@@ -30,13 +30,13 @@ void MnTextView::OnDrawV(HDC* pDC, RECT& updateRect)
 	HDC		hDc		= *pDC;//pDC->GetSafeHdc();
 	HDC		memHdc	= CreateCompatibleDC(hDc);
 	HBITMAP	memBmp	= CreateCompatibleBitmap(hDc, cliRect.bottom - cliRect.top, h);
-	HBRUSH	bgBrush	= CreateSolidBrush(RGB(0xFF , 0xFF , 0xFF));
+	HBRUSH	bgBrush = CreateSolidBrush(m_colBack);
 
 	SelectObject(memHdc , memBmp );
 	SelectObject(memHdc , bgBrush);
-
+	//RGB
 	SetBkMode(memHdc,OPAQUE);
-	SetBkColor(memHdc, RGB(255,255,255));
+	SetBkColor(memHdc, this->m_colBack);
 	//CRgn rgn;
 	//GetUpdateRgn(&rgn);
 
@@ -96,8 +96,6 @@ void MnTextView::OnDrawV(HDC* pDC, RECT& updateRect)
 			
 			PlgBlt(hDc,point,memHdc,0,0, cliRect.bottom - cliRect.top,h,NULL,0,0);
 			x		+= h;
-			
-			
 		}
 		//printf("%d\n",m_visualLineView.getSubLineCount(0));
 	}
@@ -113,7 +111,7 @@ void MnTextView::drawBorder(HDC* pDC, RECT& updateRect)
 {
 	RECT cliRect;
 	GetClientRect(m_hWnd,&cliRect);
-	HBRUSH brush = CreateSolidBrush(RGB(255,255,255));	
+	HBRUSH brush = CreateSolidBrush(m_colBack);	
 }
 void MnTextView::drawMarginLeft(HDC* pDC)
 {
@@ -318,11 +316,11 @@ BOOL MnTextView::CreateMyCaret(void)
 	}
 	if(m_direction == WD_HORIZONTAL)
 	{
-		CreateCaret(m_hWnd, (HBITMAP)NULL, 2, h);
+		CreateCaret(m_hWnd, (HBITMAP)NULL, DFAULT_CARET_WIDTH, h);
 	}
 	else if(m_direction == WD_VERTICAL)
 	{
-		CreateCaret(m_hWnd, (HBITMAP)NULL, h, 2);
+		CreateCaret(m_hWnd, (HBITMAP)NULL, h, DFAULT_CARET_WIDTH);
 	}
 	return TRUE;
 }
@@ -497,7 +495,7 @@ LONG MnTextView::Replace_Text(const REPLACE_OPTION *pOption)
 LONG MnTextView::Find_Text(const WCHAR *pFindText, ULONG length, BOOL bBack , BOOL bMatchCase, BOOL bWrap , BOOL bSelFound)
 {
 	LONG start			= max(m_nSelectionStart, m_nSelectionEnd);
-	start				= max(start,m_nCursorOffset);
+	//start				= max(start,m_nCursorOffset);
 	ULONG found_offset	= -1;
 
 	//{
@@ -519,8 +517,8 @@ LONG MnTextView::Find_Text(const WCHAR *pFindText, ULONG length, BOOL bBack , BO
 		{
 			m_nSelectionStart	= found_offset;
 			m_nSelectionEnd		= found_offset + m_pFndIterator->find_text_length();
-			m_nCursorOffset		= m_nSelectionEnd;
-			FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
+			//m_nCursorOffset		= m_nSelectionEnd;
+			FilePosToCharPos(m_nSelectionEnd, &m_CurrentCharPos);
 
 			updateCaretPos(m_CurrentCharPos);
 			InvalidateRange(m_nSelectionStart, m_nSelectionEnd);
@@ -538,12 +536,12 @@ LONG MnTextView::Find_Text(const WCHAR *pFindText, ULONG length, BOOL bBack , BO
 LONG MnTextView::FindForward2(BOOL bMatchcase, const WCHAR *pFind_text, BOOL bReplaceAll)
 {
 	LONG start			= min(m_nSelectionStart, m_nSelectionEnd);
-	start				= min(start,m_nCursorOffset);
+	//start				= min(start,m_nCursorOffset);
 	ULONG found_offset	= -1;
 	//WCHAR *pFind_text	= m_pFndIterator->find_text();
 	//ULONG erase_length	= m_pFndIterator->find_text_length();
 	ULONG find_length	= lstrlen(pFind_text);
-	if(m_pTextDoc->find(m_nCursorOffset, pFind_text, find_length, &found_offset))
+	if (m_pTextDoc->find(m_nSelectionEnd, pFind_text, find_length, &found_offset))
 	{
 		return found_offset;
 		//m_pTextDoc->replace_text(found_offset, pInsertText, insert_length, erase_length);
@@ -556,7 +554,7 @@ LONG MnTextView::ReplaceALLForward (BOOL bMatchCase, const WCHAR *pReplaceText)
 	LONG offset_find	= -1;
 	LONG count			= 0;
 	LONG start			= min(m_nSelectionStart, m_nSelectionEnd);
-	start				= min(start,m_nCursorOffset);
+	//start				= min(start,m_nCursorOffset);
 	LONG erase_length	= m_pFndIterator->find_text_length();
 	LONG insert_length	= lstrlen(pReplaceText);
 
@@ -581,7 +579,7 @@ LONG MnTextView::ReplaceALLBackward(BOOL bMatchCase, const WCHAR *pReplaceText)
 	LONG offset_find	= -1;
 	LONG count			= 0;
 	LONG start			= max(m_nSelectionStart, m_nSelectionEnd);
-	start				= max(start,m_nCursorOffset);
+	//start				= max(start,m_nCursorOffset);
 	LONG erase_length	= m_pFndIterator->find_text_length();
 	LONG insert_length	= lstrlen(pReplaceText);
 
@@ -620,18 +618,18 @@ LONG MnTextView::FindForward(BOOL bMatchCase, const WCHAR *pReplaceText, BOOL bR
 		}
 	}
 	ULONG found = -1;
-	if(m_pTextDoc->find(m_nCursorOffset,L"abc", 3, &found))
+	if (m_pTextDoc->find(m_nSelectionEnd, L"abc", 3, &found))
 	{
 		int stop =1;
 	}
-	found_offset		= m_pFndIterator->find_forward2(m_nCursorOffset, bMatchCase);
+	found_offset = m_pFndIterator->find_forward2(m_nSelectionEnd, bMatchCase);
 
 	if(found_offset >= 0)
 	{
 		m_nSelectionStart	= found_offset;
 		m_nSelectionEnd		= found_offset + m_pFndIterator->find_text_length();
-		m_nCursorOffset		= m_nSelectionEnd;
-		FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
+		//m_nCursorOffset		= m_nSelectionEnd;
+		FilePosToCharPos(m_nSelectionEnd, &m_CurrentCharPos);
 
 		updateCaretPos(m_CurrentCharPos);
 		InvalidateRange(m_nSelectionStart, m_nSelectionEnd);
@@ -667,8 +665,8 @@ LONG MnTextView::FindBackward(BOOL bMatchCase, const WCHAR *pReplaceText, BOOL b
 	{
 		m_nSelectionStart	= found_offset;
 		m_nSelectionEnd		= found_offset + m_pFndIterator->find_text_length();
-		m_nCursorOffset		= m_nSelectionEnd;
-		FilePosToCharPos(m_nCursorOffset, &m_CurrentCharPos);
+		//m_nCursorOffset		= m_nSelectionEnd;
+		FilePosToCharPos(m_nSelectionEnd, &m_CurrentCharPos);
 
 		updateCaretPos(m_CurrentCharPos);
 		InvalidateRange(m_nSelectionStart, m_nSelectionEnd);

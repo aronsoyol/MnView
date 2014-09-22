@@ -67,6 +67,7 @@ TextDocument::TextDocument()
 
 	lstrcpy( m_docTitle,	L"Untitled");
 	lstrcpy( m_docPath,		L"Untitled.txt");
+	EmptyDoc();
 }
 
 //
@@ -337,7 +338,7 @@ bool TextDocument::init(HANDLE hFile)
 	//}
 
 	// try to detect if this is an ascii/unicode/utf8 file
-	//m_nFileFormat = detect_file_format(&m_nHeaderSize);
+	// m_nFileFormat = detect_file_format(&m_nHeaderSize);
 	// work out where each line of text starts
 	if(!init_linebuffer())
 		clear();
