@@ -111,15 +111,15 @@ public:
 	int			getCharCount_Without_CRLF(int logline);
 	
 
-	LINE_INDEX& getLineIndex(const CHAR_POS& charPos);
-	LINE_INDEX& getLineIndex(UINT visLine);
-	LINE_INDEX& getLineIndex(UINT logLine,UINT subLine);
-	LINE_INDEX& next(LINE_INDEX&);
-	LINE_INDEX& last(LINE_INDEX&);
-	LINE_INDEX& getEnd();
-	LINE_INDEX&	getBegin();
+	LINE_INDEX	getLineIndex(const CHAR_POS& charPos);
+	LINE_INDEX	getLineIndex(UINT visLine);
+	LINE_INDEX	getLineIndex(UINT logLine,UINT subLine);
+	LINE_INDEX	next(LINE_INDEX&);
+	LINE_INDEX	last(LINE_INDEX&);
+	LINE_INDEX	getEnd();
+	LINE_INDEX	getBegin();
 
-	LINE_INDEX& drawVisLine(HDC hdc,LINE_INDEX& idx,int x, int y);
+	LINE_INDEX	drawVisLine(HDC hdc,LINE_INDEX& idx,int x, int y);
 	void		drawVisLine(HDC hdc,UINT visLine,int x, int y);
 
 	void		resetCache(int line );

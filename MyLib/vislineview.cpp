@@ -408,11 +408,11 @@ BOOL VisLineView::getLocation(__in const CHAR_POS* pCharPos, __out POINT* point)
 
 	return TRUE;
 }
-LINE_INDEX& VisLineView::next(LINE_INDEX& index)
+LINE_INDEX VisLineView::next(LINE_INDEX& index)
 {
 	return getLineIndex(index.visLine + 1);
 }
-LINE_INDEX& VisLineView::last(LINE_INDEX& index)
+LINE_INDEX VisLineView::last(LINE_INDEX& index)
 {
 	return getLineIndex(max(index.visLine - 1,0));
 }
@@ -440,7 +440,7 @@ LINE_INDEX& VisLineView::last(LINE_INDEX& index)
 //{
 //	//get
 //}
-LINE_INDEX&  VisLineView::drawVisLine(HDC hdc,LINE_INDEX& idx,int x, int y)
+LINE_INDEX  VisLineView::drawVisLine(HDC hdc,LINE_INDEX& idx,int x, int y)
 {
 	//m_LogLineList[idx.logLine].drawSubLine(&hdc, idx.subLine, x, y);
 	int CID = getLineCache(idx.logLine);
@@ -506,7 +506,7 @@ LINE_INDEX&  VisLineView::drawVisLine(HDC hdc,LINE_INDEX& idx,int x, int y)
 	}
 	return next;
 }
-LINE_INDEX& VisLineView::getLineIndex(const CHAR_POS& charPos)
+LINE_INDEX VisLineView::getLineIndex(const CHAR_POS& charPos)
 {
 	CHAR_LOC loc;
 	int dLine = min(m_logLineCount - 1, max(0, charPos.logLine));
@@ -516,7 +516,7 @@ LINE_INDEX& VisLineView::getLineIndex(const CHAR_POS& charPos)
 		return getLineIndex(dLine, loc.subLine);
 	}
 }
-LINE_INDEX& VisLineView::getLineIndex(UINT visLine)
+LINE_INDEX VisLineView::getLineIndex(UINT visLine)
 {
 	//IDX.visLine	= visLine;
 	if(/*visLine > m_visLineCount || */visLine < 0) throw MnException();
@@ -558,7 +558,7 @@ LINE_INDEX& VisLineView::getLineIndex(UINT visLine)
 
 	return LINE_INDEX(v,l,s);
 }
-LINE_INDEX& VisLineView::getLineIndex(UINT logLine,UINT subLine )
+LINE_INDEX VisLineView::getLineIndex(UINT logLine,UINT subLine )
 {
 	LINE_INDEX IDX;
 	IDX.logLine		= logLine;	
@@ -652,11 +652,11 @@ int	VisLineView::getLineCache(UINT line)
 	m_mruc_ID		= m_rci;
 	return m_rci;
 }
-LINE_INDEX& VisLineView::getEnd()
+LINE_INDEX VisLineView::getEnd()
 {
 	return LINE_INDEX(0,m_logLineCount,0);
 }
-LINE_INDEX&	VisLineView::getBegin()
+LINE_INDEX	VisLineView::getBegin()
 {
 	return LINE_INDEX(0,0,0);
 }
