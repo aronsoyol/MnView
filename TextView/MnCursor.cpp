@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include "MnCursor.h"
+#include "MnStaticResource.h"
 static unsigned char CursorXORMask[128] =
 {
 	0x00, 0x00, 0x00, 0x00,
@@ -70,19 +70,19 @@ static unsigned char CursorANDMask[128] =
 	0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF,
 };
-HCURSOR CreateMyCursor(HMODULE module)
+HCURSOR CreateMnCursor(HMODULE module)
 {
 	return CreateCursor(module, 6, 16, 32, 32, CursorANDMask, CursorXORMask);
 }
-MnCursor::MnCursor()
-{
-	m_hCursor = CreateMyCursor(GetModuleHandle(0));
-}
-MnCursor::~MnCursor()
-{
-	DestroyCursor(m_hCursor);
-}
-HCURSOR MnCursor::GetCurosr()
-{
-	return m_hCursor;
-}
+//MnCursor::MnCursor()
+//{
+//	m_hCursor = CreateMyCursor(GetModuleHandle(0));
+//}
+//MnCursor::~MnCursor()
+//{
+//	DestroyCursor(m_hCursor);
+//}
+//HCURSOR MnCursor::GetCurosr()
+//{
+//	return m_hCursor;
+//}

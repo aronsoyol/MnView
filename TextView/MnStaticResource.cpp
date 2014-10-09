@@ -5,7 +5,7 @@ MnStaticResource::MnStaticResource():
 	m_hCursor(0)
 {
 	PutMnWhiteToMemory();
-	m_hCursor = CreateMyCursor(GetModuleHandle(0));
+	m_hCursor = CreateMnCursor(GetModuleHandle(0));
 }
 
 MnStaticResource::~MnStaticResource()

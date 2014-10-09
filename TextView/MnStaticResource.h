@@ -1,7 +1,7 @@
 #pragma once
 //#include "MnCursor.h"
-BOOL PutMnWhiteToMemory();
-HCURSOR CreateMyCursor(HMODULE module);
+BOOL	PutMnWhiteToMemory();
+HCURSOR CreateMnCursor(HMODULE module);
 class MnStaticResource
 {
 	HCURSOR m_hCursor;

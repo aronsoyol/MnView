@@ -221,6 +221,7 @@
     <ClCompile Include="MnStaticResource.cpp" />
     <ClCompile Include="MnTextView.cpp" />
     <ClCompile Include="MnTextView_EM_Handler.cpp" />
+    <ClCompile Include="MnTextView_FindReplace.cpp" />
     <ClCompile Include="MnTextView_MyCode.cpp" />
     <ClCompile Include="MnWhite.cpp" />
     <ClCompile Include="sequence.cpp">

@@ -3,7 +3,6 @@
 //
 //	PURPOSE:	Implementation of the TextView control
 //
-//	NOTES:		www.catch22.net
 //
 #define _WIN32_WINNT 0x501
 #define STRICT
@@ -45,7 +44,7 @@ LRESULT WINAPI MnTextViewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 	// and store pointer to it in our extra-window-bytes
 
 	case WM_NCCREATE:
-
+	{
 		//_CrtDumpMemoryLeaks();
 		if((ptv = new MnTextView(hwnd)) == 0)
 			return FALSE;
@@ -55,7 +54,7 @@ LRESULT WINAPI MnTextViewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		
 
 		return TRUE;
-
+	}
 	// Last message received by any window - delete the TextView object
 	case WM_NCDESTROY:
 		delete ptv;

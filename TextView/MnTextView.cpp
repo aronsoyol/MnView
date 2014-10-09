@@ -1,7 +1,5 @@
 ﻿#include "MnTextView.h"	
-//#include "../verui/verui.h"
-//#include "../MnTextDotNet/resource.h"
-//MnCursor			MnTextView::m_mnCursor;
+
 MnStaticResource	MnTextView::m_Res;
 MnTextView::MnTextView(HWND hwnd):
 	TextViewBase		(hwnd		),
@@ -9,22 +7,22 @@ MnTextView::MnTextView(HWND hwnd):
 	m_fMenuVisible		(0			),
 	m_hResModule		(0			),
 	m_hMainModule		(0			),
-	m_pFontManager		(0			),
+	
 	m_direction			(WD_VERTICAL),
 	m_nScrollPos		(0			),
 	m_nScrollMax		(0			),
+	m_pFontManager		(0			),
 	m_MarginBottom		(Margin		),
 	m_MarginTop			(Margin		),
 	m_MarginRight		(Margin		),
-	m_MarginLeft		(Margin		)
+	m_MarginLeft		(Margin		),
+	m_colFore			(RGB(0,0,0) ),
+	m_colBack			(RGB(255,255,255))
 {
-	//setMargin(Margin);
+
 	m_pFontManager	= new MNFontManager();
 
 	m_hMainModule	= GetModuleHandle(0);
-	m_colBack		= GetSysColor(COLOR_WINDOW);
-	m_colFore		= GetSysColor(COLOR_WINDOWTEXT);
-
 }
 MnTextView::~MnTextView(void)
 {
@@ -112,9 +110,19 @@ LONG MnTextView::OnSetText(WCHAR* buffer, ULONG length)
 		//m_visualLineView.resetCache();
 		//m_visualLineView.setLineHeight(m_pFontManager->getLineHeight());
 		//Smeg(TRUE);
-		OnKillFocus(0);
-		OnSetFocus(0);
+
+
+		//if (m_nSelectionMode != SEL_NONE)
+		//{
+		//	OnLButtonUp(0, 0, 0);
+		//}
+		if (m_bFocused)
+			updateCaretPos(m_CurrentCharPos);
+
+
+		RefreshWindow();
 		return TRUE;
+
 	}
 	return FALSE;
 }
@@ -492,8 +500,10 @@ LONG MnTextView::OnSetFont(HFONT hFont)
 	m_visualLineView.resetCache();
 	m_visualLineView.setLineHeight(m_pFontManager->getLineHeight());
 	Smeg(TRUE);
-	OnKillFocus(0);
-	OnSetFocus(0);
+	//OnKillFocus(0);
+	//OnSetFocus(0);
+	if (m_bFocused)
+		updateCaretPos(m_CurrentCharPos);
 	ImeSetCompWindowFont();
 	return 0;
 }
@@ -584,9 +594,14 @@ BOOL MnTextView::MouseCoordToCharPos(int mx, int my, __out CHAR_POS* charPos, in
 	*px = point.x;
 	return TRUE;
 }
+
+LONG MnTextView::OnKillFocus(HWND hwndNew)
+{
+	m_bFocused = false;
+	return TextViewBase::OnKillFocus(hwndNew);
+}
 LONG MnTextView::OnSetFocus(HWND hwndOld)
 {
-	//CreateCaret(m_hWnd, (HBITMAP)NULL, m_nCaretWidth, m_nLineHeight);
 	m_bFocused = true;
 	CreateMyCaret();
 	updateCaretPos(m_CurrentCharPos);
@@ -594,29 +609,7 @@ LONG MnTextView::OnSetFocus(HWND hwndOld)
 	ShowCaret(m_hWnd);
 	RefreshWindow();
 	return 0;
-}
-LONG MnTextView::OnKillFocus(HWND hwndNew)
-{
-	// if we are making a selection when we lost focus then
-	// stop the selection logic
-	OutputDebugString(L"OnKillFocus\n");
-	//RECT cliRect;//, zeroRect = {0,0,0,0};
-	//GetClientRect(this->m_hWnd, &cliRect);
-	//HBRUSH brush	= CreateSolidBrush(m_colBack);
-	//HDC hdc			= GetDC(m_hWnd);
-	//FillRect(hdc, &cliRect, brush);
-	//DeleteObject(hdc);
-	//DeleteObject(brush);
-	m_bFocused = false;
-	if (m_nSelectionMode != SEL_NONE)
-	{
-		OnLButtonUp(0, 0, 0);
-	}
 
-	HideCaret(m_hWnd);
-	DestroyCaret();
-	RefreshWindow();
-	return 0;
 }
 LONG MnTextView::OnKeyDown(UINT nKeyCode, UINT nFlags)
 {
@@ -1839,8 +1832,8 @@ void MnTextView::OnTesterMode(bool mode)
 	m_visualLineView.resetCache();
 	m_visualLineView.setLineHeight(m_pFontManager->getLineHeight());
 	Smeg(TRUE);
-	OnKillFocus(0);
-	OnSetFocus(0);
+	if (m_bFocused)
+		updateCaretPos(m_CurrentCharPos);
 }
 void MnTextView::ImeSetCompWindowFont()
 {

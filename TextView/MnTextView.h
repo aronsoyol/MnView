@@ -16,8 +16,10 @@
 #define WD_VERTICAL				1
 #define Margin					2
 #define DFAULT_CARET_WIDTH		1
+
 int ScrollDir(int counter, int dir);
 HCURSOR CreateMyCursor(HMODULE module);
+
 class MnTextView:public TextViewBase
 {
 	friend class VisLineView;
@@ -29,8 +31,10 @@ class MnTextView:public TextViewBase
 	//BOOL			m_isLButtonDown;
 	//CHAR_POS		m_selStart;
 	//UINT			m_selLength;
+	static MnStaticResource		m_Res;
 protected:
 	BOOL			m_direction;
+
 
 	int				m_MarginLeft;
 	int				m_MarginRight;
@@ -55,11 +59,13 @@ protected:
 	COLORREF		m_colFore;
 	COLORREF		m_colBack;
 
-	static MnStaticResource		m_Res;
+	
 	
 public:
 	MnTextView(HWND hwnd);
 	~MnTextView(void);
+
+
 
 private:
 	//
@@ -133,7 +139,6 @@ private:
 		LINE_INDEX idx = m_visualLineView.getLineIndex(m_CurrentCharPos);
 		return idx.visLine;
 	}
-	
 	virtual LONG OnGetSelText(WCHAR* pBuffer, ULONG bufferLength);
 	virtual	LONG OnGetCurLineD()
 	{
